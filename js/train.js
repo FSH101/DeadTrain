@@ -1,34 +1,61 @@
+let currentWagonId = 1;
+let currentStepIndex = 0;
+let wagonData = null;
+
+// Загружаем вагон по ID
 async function loadWagon(id) {
-  const container = document.getElementById("wagon-content");
-  container.classList.remove("fade-in");
-  await new Promise(r => setTimeout(r, 200)); // пауза перед сменой
-
-  try {
-    const res = await fetch(`wagons/wagon${id}.json`);
-    const wagon = await res.json();
-
-    document.getElementById("wagon-title").textContent = wagon.title;
-    document.getElementById("wagon-description").textContent = wagon.description;
-    document.getElementById("wagon-question").textContent = wagon.question;
-
-    const optionsContainer = document.getElementById("wagon-options");
-    optionsContainer.innerHTML = '';
-
-    wagon.options.forEach(opt => {
-      const btn = document.createElement("button");
-      btn.textContent = opt.text;
-      btn.onclick = () => loadWagon(opt.next);
-      optionsContainer.appendChild(btn);
-    });
-
-    container.classList.add("fade-in");
-  } catch (err) {
-    document.getElementById("wagon-title").textContent = "Ошибка загрузки";
-    document.getElementById("wagon-description").textContent = "";
-    document.getElementById("wagon-question").textContent = "";
-    document.getElementById("wagon-options").innerHTML = "";
-  }
+    const response = await fetch(`wagons/wagon${id}.json`);
+    wagonData = await response.json();
+    currentStepIndex = 0;
+    renderCurrentStep();
 }
 
-// Старт с первого вагона
-loadWagon(1);
+// Показываем текущий шаг
+function renderCurrentStep() {
+    const step = wagonData.steps[currentStepIndex];
+    const container = document.getElementById('train-container');
+    container.innerHTML = ''; // очищаем
+
+    if (!step) return;
+
+    if (step.type === 'text') {
+        const p = document.createElement('p');
+        p.textContent = step.content;
+        p.className = 'step-text';
+        container.appendChild(p);
+
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = 'Далее';
+        nextBtn.className = 'next-btn';
+        nextBtn.onclick = () => {
+            currentStepIndex++;
+            renderCurrentStep();
+        };
+        container.appendChild(nextBtn);
+
+    } else if (step.type === 'question') {
+        const q = document.createElement('p');
+        q.textContent = step.question;
+        q.className = 'step-question';
+        container.appendChild(q);
+
+        step.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.textContent = opt.text;
+            btn.className = 'option-btn';
+            btn.onclick = () => {
+                currentStepIndex = opt.nextStep;
+                renderCurrentStep();
+            };
+            container.appendChild(btn);
+        });
+
+    } else if (step.type === 'end') {
+        loadWagon(step.gotoWagon);
+    }
+}
+
+// Начинаем игру с первого вагона
+window.onload = () => {
+    loadWagon(currentWagonId);
+};
