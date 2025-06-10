@@ -1,0 +1,99 @@
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: 'Montserrat', sans-serif;
+  background: #000;
+  overflow: hidden;
+  color: #fff;
+}
+
+/* Задний фон */
+.background-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at center, #0b0b0b 0%, #000000 100%);
+  z-index: -3;
+}
+
+/* Эффект дыма */
+.smoke {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: url('assets/smoke.gif') repeat;
+  opacity: 0.05;
+  animation: moveSmoke 60s linear infinite;
+  z-index: -2;
+}
+
+@keyframes moveSmoke {
+  from { background-position: 0 0; }
+  to { background-position: 1000px 0; }
+}
+
+/* Заглавие */
+.title-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  animation: fadeIn 2s ease-in-out;
+}
+
+.game-title {
+  font-family: 'UnifrakturCook', cursive;
+  font-size: 4rem;
+  color: #ccc;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  margin-bottom: 1rem;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  color: #888;
+  margin-bottom: 2rem;
+}
+
+/* Кнопка */
+.start-btn {
+  background: transparent;
+  border: 2px solid #999;
+  color: #ccc;
+  padding: 12px 32px;
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.start-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: #fff;
+  color: #fff;
+}
+
+/* Анимация появления */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Анимация выхода */
+body.fade-out {
+  animation: fadeOut 1s forwards;
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; }
+}
