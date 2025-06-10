@@ -1,3 +1,29 @@
-тут будет шедевр
-а пока 404
-идите в жопу.
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Призрачная электричка</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Montserrat:wght@300;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="background-overlay"></div>
+  <div class="smoke"></div>
+
+  <main class="title-screen">
+    <h1 class="game-title">Призрачная<br>электричка</h1>
+    <p class="subtitle">Найди путь через себя</p>
+    <button class="start-btn">Начать путешествие</button>
+  </main>
+
+  <script>
+    document.querySelector('.start-btn').addEventListener('click', () => {
+      document.body.classList.add('fade-out');
+      setTimeout(() => {
+        window.location.href = "train.html"; // или другой экран
+      }, 1000);
+    });
+  </script>
+</body>
+</html>
