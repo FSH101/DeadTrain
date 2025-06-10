@@ -1,17 +1,17 @@
 # Используем официальный образ PHP с Apache
 FROM php:7.4-apache
 
-# Включаем модуль mod_rewrite, если понадобится позже
+# Включаем mod_rewrite
 RUN a2enmod rewrite
 
-# Копируем все файлы проекта в директорию, обслуживаемую Apache
+# Копируем проект
 COPY . /var/www/html/
 
-# Делаем папку userdata доступной для записи
-RUN chmod -R 777 /var/www/html/userdata
+# Создаём папку userdata и даём права
+RUN mkdir -p /var/www/html/userdata && chmod -R 777 /var/www/html/userdata
 
 # Открываем порт 80
 EXPOSE 80
 
-# Запускаем Apache в фоне
+# Запускаем Apache
 CMD ["apache2-foreground"]
