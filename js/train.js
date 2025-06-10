@@ -1,69 +1,34 @@
-body, html {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  font-family: 'Segoe UI', sans-serif;
-  background: #000;
-  color: #fff;
-  overflow: hidden;
+async function loadWagon(id) {
+  const container = document.getElementById("wagon-content");
+  container.classList.remove("fade-in");
+  await new Promise(r => setTimeout(r, 200)); // пауза перед сменой
+
+  try {
+    const res = await fetch(`wagons/wagon${id}.json`);
+    const wagon = await res.json();
+
+    document.getElementById("wagon-title").textContent = wagon.title;
+    document.getElementById("wagon-description").textContent = wagon.description;
+    document.getElementById("wagon-question").textContent = wagon.question;
+
+    const optionsContainer = document.getElementById("wagon-options");
+    optionsContainer.innerHTML = '';
+
+    wagon.options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.textContent = opt.text;
+      btn.onclick = () => loadWagon(opt.next);
+      optionsContainer.appendChild(btn);
+    });
+
+    container.classList.add("fade-in");
+  } catch (err) {
+    document.getElementById("wagon-title").textContent = "Ошибка загрузки";
+    document.getElementById("wagon-description").textContent = "";
+    document.getElementById("wagon-question").textContent = "";
+    document.getElementById("wagon-options").innerHTML = "";
+  }
 }
 
-.background {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%;
-  height: 100%;
-  background: url('../assets/background.gif') center center / cover no-repeat;
-  z-index: 1;
-  opacity: 0.2;
-  animation: float 30s linear infinite;
-}
-
-@keyframes float {
-  0% { background-position-x: 0; }
-  100% { background-position-x: -1000px; }
-}
-
-.overlay {
-  position: relative;
-  z-index: 2;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  text-align: center;
-}
-
-#wagon-content {
-  background: rgba(0, 0, 0, 0.7);
-  border: 1px solid #444;
-  border-radius: 10px;
-  padding: 30px;
-  max-width: 600px;
-  transition: opacity 0.5s;
-}
-
-.options button {
-  background: #222;
-  color: #fff;
-  border: none;
-  padding: 12px 24px;
-  margin: 10px 5px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.options button:hover {
-  background: #444;
-}
-
-.fade-in {
-  opacity: 0;
-  animation: fadeIn 0.8s forwards;
-}
-
-@keyframes fadeIn {
-  to { opacity: 1; }
-}
+// Старт с первого вагона
+loadWagon(1);
