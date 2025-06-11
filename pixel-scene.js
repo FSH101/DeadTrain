@@ -6,7 +6,7 @@
   <style>
     body {
       margin: 0;
-      background-color: #1a1a1a;
+      background-color: #1e1e1e;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -15,8 +15,10 @@
 
     canvas {
       image-rendering: pixelated;
-      border: 2px solid #333;
-      background-color: #2b2b2b;
+      width: 160px;   /* Масштаб: 10x от оригинала */
+      height: 160px;
+      border: 2px solid #444;
+      background-color: #2a2a2a;
     }
   </style>
 </head>
@@ -27,55 +29,52 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    // Увеличиваем отображение (масштаб x6)
-    const scale = 6;
-    canvas.style.width = canvas.width * scale + "px";
-    canvas.style.height = canvas.height * scale + "px";
-
-    // Утилита — пиксельный "карандаш"
     function drawPixel(x, y, color) {
       ctx.fillStyle = color;
       ctx.fillRect(x, y, 1, 1);
     }
 
     function drawCharacter() {
-      // Очистка
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, 16, 16);
 
       // Волосы
-      drawPixel(7, 2, "#3a2c20");
-      drawPixel(8, 2, "#3a2c20");
+      drawPixel(7, 2, "#3b2e2a");
+      drawPixel(8, 2, "#3b2e2a");
 
       // Лицо
-      drawPixel(7, 3, "#fcbf9d");
-      drawPixel(8, 3, "#fcbf9d");
-      drawPixel(7, 4, "#fcbf9d");
-      drawPixel(8, 4, "#fcbf9d");
+      drawPixel(7, 3, "#deb887");
+      drawPixel(8, 3, "#deb887");
+      drawPixel(7, 4, "#deb887");
+      drawPixel(8, 4, "#deb887");
+
+      // Глаза
+      drawPixel(7, 4, "#ffffff");
+      drawPixel(8, 4, "#ffffff");
 
       // Тело (рубашка)
-      drawPixel(6, 5, "#2c4a78");
-      drawPixel(7, 5, "#2c4a78");
-      drawPixel(8, 5, "#2c4a78");
-      drawPixel(9, 5, "#2c4a78");
+      drawPixel(6, 5, "#3a6ea5");
+      drawPixel(7, 5, "#3a6ea5");
+      drawPixel(8, 5, "#3a6ea5");
+      drawPixel(9, 5, "#3a6ea5");
 
-      drawPixel(6, 6, "#2c4a78");
-      drawPixel(7, 6, "#2c4a78");
-      drawPixel(8, 6, "#2c4a78");
-      drawPixel(9, 6, "#2c4a78");
+      drawPixel(6, 6, "#3a6ea5");
+      drawPixel(7, 6, "#3a6ea5");
+      drawPixel(8, 6, "#3a6ea5");
+      drawPixel(9, 6, "#3a6ea5");
 
       // Руки
-      drawPixel(5, 6, "#2c4a78");
-      drawPixel(10, 6, "#2c4a78");
+      drawPixel(5, 6, "#deb887");
+      drawPixel(10, 6, "#deb887");
 
       // Штаны
-      drawPixel(6, 7, "#1a1a1a");
-      drawPixel(7, 7, "#1a1a1a");
-      drawPixel(8, 7, "#1a1a1a");
-      drawPixel(9, 7, "#1a1a1a");
+      drawPixel(6, 7, "#222");
+      drawPixel(7, 7, "#222");
+      drawPixel(8, 7, "#222");
+      drawPixel(9, 7, "#222");
 
       // Обувь
-      drawPixel(6, 8, "#555");
-      drawPixel(9, 8, "#555");
+      drawPixel(6, 8, "#888");
+      drawPixel(9, 8, "#888");
     }
 
     drawCharacter();
