@@ -1,82 +1,124 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Тест вагона с человеком</title>
+  <meta charset="UTF-8" />
+  <title>Призрачная электричка — Переход</title>
   <style>
     body {
       margin: 0;
       background: black;
+      overflow: hidden;
     }
     canvas {
       display: block;
-      margin: 0 auto;
-      background: #111;
+      image-rendering: pixelated;
     }
   </style>
 </head>
 <body>
-  <canvas id="trainCanvas" width="800" height="600"></canvas>
+  <canvas id="trainCanvas" width="800" height="400"></canvas>
 
   <script>
-    const canvas = document.getElementById('trainCanvas');
-    const ctx = canvas.getContext('2d');
+    const canvas = document.getElementById("trainCanvas");
+    const ctx = canvas.getContext("2d");
 
-    let personX = 0;
+    const WIDTH = canvas.width;
+    const HEIGHT = canvas.height;
+
+    let personX = 50;
+    const personY = 300;
+    let doorOpen = false;
+    let fade = 0;
     let frame = 0;
 
-    function drawScene() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const trees = Array.from({length: 10}, (_, i) => ({
+      x: i * 150 + 200,
+      y: 100 + Math.random() * 100,
+      speed: 0.5 + Math.random() * 0.5
+    }));
 
-      // фон вагона
-      ctx.fillStyle = '#111';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    function drawBackground() {
+      // Стены
+      ctx.fillStyle = "#222";
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-      // окна
-      for (let i = 0; i < 3; i++) {
-        ctx.fillStyle = '#222';
-        ctx.fillRect(150 + i * 170, 100, 100, 200);
-        ctx.fillStyle = '#333';
-        ctx.fillRect(155 + i * 170, 105, 90, 190);
-      }
+      // Окна
+      ctx.fillStyle = "#111";
+      ctx.fillRect(100, 80, 150, 100);
+      ctx.fillRect(350, 80, 150, 100);
+      ctx.fillRect(600, 80, 150, 100);
 
-      // пол и потолок
-      ctx.fillStyle = '#222';
-      ctx.fillRect(0, 320, canvas.width, 20); // потолок
-      ctx.fillRect(0, 500, canvas.width, 100); // пол
-
-      // человек (силуэт)
-      drawPerson(personX, 460);
-
-      // движение
-      personX += 1.2;
-      if (personX > canvas.width + 20) {
-        personX = -50;
-      }
-
-      requestAnimationFrame(drawScene);
-    }
-
-    function drawPerson(x, y) {
-      ctx.fillStyle = '#444';
-
-      // тело
-      ctx.fillRect(x, y - 40, 20, 40);
-
-      // голова
+      // Лес за окнами
+      ctx.save();
       ctx.beginPath();
-      ctx.arc(x + 10, y - 50, 10, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.rect(100, 80, 150, 100);
+      ctx.rect(350, 80, 150, 100);
+      ctx.rect(600, 80, 150, 100);
+      ctx.clip();
 
-      // ноги (примитивная анимация ходьбы)
-      const legOffset = Math.sin(frame / 10) * 5;
-      ctx.fillRect(x, y, 5, 20);
-      ctx.fillRect(x + 15, y + legOffset, 5, 20);
+      for (const tree of trees) {
+        ctx.fillStyle = "#0a0";
+        ctx.fillRect(tree.x, tree.y, 10, 60);
+      }
 
-      frame++;
+      ctx.restore();
+
+      // Дверь
+      if (!doorOpen) {
+        ctx.fillStyle = "#333";
+        ctx.fillRect(750, 200, 40, 100);
+      }
     }
 
-    drawScene();
+    function drawPerson() {
+      ctx.fillStyle = "#ccc";
+      // Тело
+      ctx.fillRect(personX, personY - 40, 20, 40);
+      // Голова
+      ctx.fillRect(personX + 4, personY - 55, 12, 12);
+    }
+
+    function drawFade() {
+      if (fade > 0) {
+        ctx.fillStyle = `rgba(0, 0, 0, ${fade})`;
+        ctx.fillRect(0, 0, WIDTH, HEIGHT);
+      }
+    }
+
+    function update() {
+      // Движение леса
+      for (const tree of trees) {
+        tree.x -= tree.speed;
+        if (tree.x < 100) tree.x = 800 + Math.random() * 100;
+      }
+
+      // Движение персонажа
+      if (personX < 740) {
+        personX += 1;
+      } else {
+        doorOpen = true;
+        fade += 0.01;
+        if (fade >= 1) {
+          // Здесь можно вызвать переход к следующему вагону
+        }
+      }
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, WIDTH, HEIGHT);
+      drawBackground();
+      drawPerson();
+      drawFade();
+    }
+
+    function loop() {
+      update();
+      render();
+      frame++;
+      requestAnimationFrame(loop);
+    }
+
+    loop();
   </script>
 </body>
 </html>
