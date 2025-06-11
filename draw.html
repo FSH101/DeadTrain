@@ -2,123 +2,109 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Призрачная электричка — Переход</title>
+  <title>Призрачная электричка</title>
   <style>
     body {
       margin: 0;
-      background: black;
-      overflow: hidden;
+      background: #111;
     }
     canvas {
       display: block;
+      margin: 0 auto;
+      background-color: #1b1b1b;
       image-rendering: pixelated;
     }
   </style>
 </head>
 <body>
-  <canvas id="trainCanvas" width="800" height="400"></canvas>
+<canvas id="trainCanvas" width="640" height="360"></canvas>
 
-  <script>
-    const canvas = document.getElementById("trainCanvas");
-    const ctx = canvas.getContext("2d");
+<script>
+  const canvas = document.getElementById("trainCanvas");
+  const ctx = canvas.getContext("2d");
 
-    const WIDTH = canvas.width;
-    const HEIGHT = canvas.height;
+  const WIDTH = canvas.width;
+  const HEIGHT = canvas.height;
 
-    let personX = 50;
-    const personY = 300;
-    let doorOpen = false;
-    let fade = 0;
-    let frame = 0;
+  let frame = 0;
 
-    const trees = Array.from({length: 10}, (_, i) => ({
-      x: i * 150 + 200,
-      y: 100 + Math.random() * 100,
-      speed: 0.5 + Math.random() * 0.5
-    }));
+  // Параметры персонажа
+  let person = {
+    x: 50,
+    y: 240,
+    width: 12,
+    height: 20,
+    color: "#f5f5f5"
+  };
 
-    function drawBackground() {
-      // Стены
-      ctx.fillStyle = "#222";
-      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+  function drawBackground() {
+    // Внутренние стены
+    ctx.fillStyle = "#2c2c2c";
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-      // Окна
-      ctx.fillStyle = "#111";
-      ctx.fillRect(100, 80, 150, 100);
-      ctx.fillRect(350, 80, 150, 100);
-      ctx.fillRect(600, 80, 150, 100);
+    // Пол
+    ctx.fillStyle = "#1a1a1a";
+    ctx.fillRect(0, HEIGHT - 60, WIDTH, 60);
 
-      // Лес за окнами
-      ctx.save();
+    // Окна с пейзажем
+    for (let i = 0; i < 4; i++) {
+      let wx = 30 + i * 150;
+      ctx.fillStyle = "#3c3c3c";
+      ctx.fillRect(wx, 40, 80, 40);
+      drawForest(wx, 40);
+    }
+
+    // Сидения
+    for (let i = 0; i < 6; i++) {
+      let sx = 20 + i * 100;
+      ctx.fillStyle = "#444";
+      ctx.fillRect(sx, 180, 40, 40);
+      ctx.fillStyle = "#666";
+      ctx.fillRect(sx, 160, 40, 20);
+    }
+
+    // Дверь
+    ctx.fillStyle = "#555";
+    ctx.fillRect(WIDTH - 40, HEIGHT - 120, 30, 60);
+  }
+
+  function drawForest(wx, wy) {
+    ctx.fillStyle = "#0a0";
+    for (let i = 0; i < 8; i++) {
+      let tx = wx + (frame % 80) - i * 10;
       ctx.beginPath();
-      ctx.rect(100, 80, 150, 100);
-      ctx.rect(350, 80, 150, 100);
-      ctx.rect(600, 80, 150, 100);
-      ctx.clip();
-
-      for (const tree of trees) {
-        ctx.fillStyle = "#0a0";
-        ctx.fillRect(tree.x, tree.y, 10, 60);
-      }
-
-      ctx.restore();
-
-      // Дверь
-      if (!doorOpen) {
-        ctx.fillStyle = "#333";
-        ctx.fillRect(750, 200, 40, 100);
-      }
+      ctx.moveTo(tx, wy + 40);
+      ctx.lineTo(tx + 5, wy + 25);
+      ctx.lineTo(tx + 10, wy + 40);
+      ctx.fill();
     }
+  }
 
-    function drawPerson() {
-      ctx.fillStyle = "#ccc";
-      // Тело
-      ctx.fillRect(personX, personY - 40, 20, 40);
-      // Голова
-      ctx.fillRect(personX + 4, personY - 55, 12, 12);
+  function drawPerson() {
+    ctx.fillStyle = person.color;
+    ctx.fillRect(person.x, person.y, person.width, person.height);
+  }
+
+  function update() {
+    // Двигаем персонажа
+    if (person.x < WIDTH - 60) {
+      person.x += 1;
+    } else {
+      // Дверь открывается (эффект исчезновения)
+      person.color = "rgba(255,255,255,0.2)";
     }
+  }
 
-    function drawFade() {
-      if (fade > 0) {
-        ctx.fillStyle = `rgba(0, 0, 0, ${fade})`;
-        ctx.fillRect(0, 0, WIDTH, HEIGHT);
-      }
-    }
+  function loop() {
+    ctx.clearRect(0, 0, WIDTH, HEIGHT);
+    drawBackground();
+    drawPerson();
+    update();
+    frame++;
+    requestAnimationFrame(loop);
+  }
 
-    function update() {
-      // Движение леса
-      for (const tree of trees) {
-        tree.x -= tree.speed;
-        if (tree.x < 100) tree.x = 800 + Math.random() * 100;
-      }
-
-      // Движение персонажа
-      if (personX < 740) {
-        personX += 1;
-      } else {
-        doorOpen = true;
-        fade += 0.01;
-        if (fade >= 1) {
-          // Здесь можно вызвать переход к следующему вагону
-        }
-      }
-    }
-
-    function render() {
-      ctx.clearRect(0, 0, WIDTH, HEIGHT);
-      drawBackground();
-      drawPerson();
-      drawFade();
-    }
-
-    function loop() {
-      update();
-      render();
-      frame++;
-      requestAnimationFrame(loop);
-    }
-
-    loop();
-  </script>
+  loop();
+</script>
 </body>
 </html>
