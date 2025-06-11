@@ -1,85 +1,80 @@
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
-
-const scale = 2; // масштаб пикселя
-
-function drawPixel(x, y, color) {
-  ctx.fillStyle = color;
-  ctx.fillRect(x * scale, y * scale, scale, scale);
-}
-
-function clearScene() {
-  ctx.fillStyle = "#111";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
-
-// Простой силуэт леса
-function drawForest(offset) {
-  for (let i = 0; i < 256; i += 8) {
-    let height = 10 + (Math.sin((i + offset) / 10) * 5);
-    ctx.fillStyle = "#050";
-    ctx.fillRect(i, 80 + height, 4, 40);
-  }
-}
-
-// Простое окно
-function drawWindow(x, y, offset) {
-  ctx.fillStyle = "#003";
-  ctx.fillRect(x * scale, y * scale, 32, 24);
-  drawForest(offset);
-}
-
-// Сиденье
-function drawSeat(x, y) {
-  ctx.fillStyle = "#444";
-  ctx.fillRect(x * scale, y * scale, 12, 8);
-}
-
-// Персонаж в 8-бит стиле
-function drawCharacter(x, y, breathing) {
-  const sprite = [
-    "00100",
-    "01110",
-    "11111",
-    "00100",
-    "01110",
-    "10101",
-    "00100",
-    "01010"
-  ];
-  for (let row = 0; row < sprite.length; row++) {
-    for (let col = 0; col < sprite[row].length; col++) {
-      if (sprite[row][col] === "1") {
-        drawPixel(x + col, y + row + breathing, "#ccc");
-      }
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Пиксельный персонаж</title>
+  <style>
+    body {
+      background: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
     }
-  }
-}
+    canvas {
+      image-rendering: pixelated;
+      border: 2px solid #333;
+      background-color: #2b2b2b;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="64" height="64"></canvas>
 
-let t = 0;
-function render() {
-  clearScene();
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
-  // Пол
-  ctx.fillStyle = "#222";
-  ctx.fillRect(0, 150, canvas.width, 42);
+    const scale = 6; // масштаб для телефона
+    canvas.style.width = canvas.width * scale + "px";
+    canvas.style.height = canvas.height * scale + "px";
 
-  // Окна с прокруткой фона
-  drawWindow(5, 5, t);
-  drawWindow(16, 5, t + 30);
+    // Функция рисует персонажа пикселями
+    function drawPixel(x, y, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, 1, 1);
+    }
 
-  // Сиденья
-  drawSeat(8, 15);
-  drawSeat(20, 15);
-  drawSeat(4, 17);
-  drawSeat(24, 17);
+    function drawCharacter() {
+      ctx.clearRect(0, 0, 64, 64);
 
-  // Персонаж
-  const breath = Math.sin(t / 10) > 0 ? 0 : 1;
-  drawCharacter(12, 11, breath);
+      // Голова
+      drawPixel(30, 10, "#fcbf9d"); // лицо
+      drawPixel(31, 10, "#fcbf9d");
+      drawPixel(30, 11, "#fcbf9d");
+      drawPixel(31, 11, "#fcbf9d");
 
-  t++;
-  requestAnimationFrame(render);
-}
+      // Волосы
+      drawPixel(30, 9, "#3a2c20");
+      drawPixel(31, 9, "#3a2c20");
 
-render();
+      // Тело (рубашка)
+      for (let y = 12; y <= 17; y++) {
+        drawPixel(29, y, "#2c4a78");
+        drawPixel(30, y, "#2c4a78");
+        drawPixel(31, y, "#2c4a78");
+        drawPixel(32, y, "#2c4a78");
+      }
+
+      // Руки
+      drawPixel(28, 13, "#2c4a78");
+      drawPixel(33, 13, "#2c4a78");
+
+      // Штаны
+      for (let y = 18; y <= 20; y++) {
+        drawPixel(29, y, "#1a1a1a");
+        drawPixel(30, y, "#1a1a1a");
+        drawPixel(31, y, "#1a1a1a");
+        drawPixel(32, y, "#1a1a1a");
+      }
+
+      // Обувь
+      drawPixel(29, 21, "#555");
+      drawPixel(32, 21, "#555");
+    }
+
+    drawCharacter();
+  </script>
+</body>
+</html>
