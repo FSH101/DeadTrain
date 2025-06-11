@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Тест вагона с человеком</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background: #111;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="trainCanvas" width="800" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById('trainCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let personX = 0;
+    let frame = 0;
+
+    function drawScene() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // фон вагона
+      ctx.fillStyle = '#111';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // окна
+      for (let i = 0; i < 3; i++) {
+        ctx.fillStyle = '#222';
+        ctx.fillRect(150 + i * 170, 100, 100, 200);
+        ctx.fillStyle = '#333';
+        ctx.fillRect(155 + i * 170, 105, 90, 190);
+      }
+
+      // пол и потолок
+      ctx.fillStyle = '#222';
+      ctx.fillRect(0, 320, canvas.width, 20); // потолок
+      ctx.fillRect(0, 500, canvas.width, 100); // пол
+
+      // человек (силуэт)
+      drawPerson(personX, 460);
+
+      // движение
+      personX += 1.2;
+      if (personX > canvas.width + 20) {
+        personX = -50;
+      }
+
+      requestAnimationFrame(drawScene);
+    }
+
+    function drawPerson(x, y) {
+      ctx.fillStyle = '#444';
+
+      // тело
+      ctx.fillRect(x, y - 40, 20, 40);
+
+      // голова
+      ctx.beginPath();
+      ctx.arc(x + 10, y - 50, 10, 0, Math.PI * 2);
+      ctx.fill();
+
+      // ноги (примитивная анимация ходьбы)
+      const legOffset = Math.sin(frame / 10) * 5;
+      ctx.fillRect(x, y, 5, 20);
+      ctx.fillRect(x + 15, y + legOffset, 5, 20);
+
+      frame++;
+    }
+
+    drawScene();
+  </script>
+</body>
+</html>
