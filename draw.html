@@ -2,109 +2,22 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Призрачная электричка</title>
+  <title>Тест пиксельной сцены</title>
   <style>
     body {
-      margin: 0;
       background: #111;
+      margin: 0;
+      overflow: hidden;
     }
     canvas {
       display: block;
       margin: 0 auto;
-      background-color: #1b1b1b;
-      image-rendering: pixelated;
+      background-color: #222;
     }
   </style>
 </head>
 <body>
-<canvas id="trainCanvas" width="640" height="360"></canvas>
-
-<script>
-  const canvas = document.getElementById("trainCanvas");
-  const ctx = canvas.getContext("2d");
-
-  const WIDTH = canvas.width;
-  const HEIGHT = canvas.height;
-
-  let frame = 0;
-
-  // Параметры персонажа
-  let person = {
-    x: 50,
-    y: 240,
-    width: 12,
-    height: 20,
-    color: "#f5f5f5"
-  };
-
-  function drawBackground() {
-    // Внутренние стены
-    ctx.fillStyle = "#2c2c2c";
-    ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
-    // Пол
-    ctx.fillStyle = "#1a1a1a";
-    ctx.fillRect(0, HEIGHT - 60, WIDTH, 60);
-
-    // Окна с пейзажем
-    for (let i = 0; i < 4; i++) {
-      let wx = 30 + i * 150;
-      ctx.fillStyle = "#3c3c3c";
-      ctx.fillRect(wx, 40, 80, 40);
-      drawForest(wx, 40);
-    }
-
-    // Сидения
-    for (let i = 0; i < 6; i++) {
-      let sx = 20 + i * 100;
-      ctx.fillStyle = "#444";
-      ctx.fillRect(sx, 180, 40, 40);
-      ctx.fillStyle = "#666";
-      ctx.fillRect(sx, 160, 40, 20);
-    }
-
-    // Дверь
-    ctx.fillStyle = "#555";
-    ctx.fillRect(WIDTH - 40, HEIGHT - 120, 30, 60);
-  }
-
-  function drawForest(wx, wy) {
-    ctx.fillStyle = "#0a0";
-    for (let i = 0; i < 8; i++) {
-      let tx = wx + (frame % 80) - i * 10;
-      ctx.beginPath();
-      ctx.moveTo(tx, wy + 40);
-      ctx.lineTo(tx + 5, wy + 25);
-      ctx.lineTo(tx + 10, wy + 40);
-      ctx.fill();
-    }
-  }
-
-  function drawPerson() {
-    ctx.fillStyle = person.color;
-    ctx.fillRect(person.x, person.y, person.width, person.height);
-  }
-
-  function update() {
-    // Двигаем персонажа
-    if (person.x < WIDTH - 60) {
-      person.x += 1;
-    } else {
-      // Дверь открывается (эффект исчезновения)
-      person.color = "rgba(255,255,255,0.2)";
-    }
-  }
-
-  function loop() {
-    ctx.clearRect(0, 0, WIDTH, HEIGHT);
-    drawBackground();
-    drawPerson();
-    update();
-    frame++;
-    requestAnimationFrame(loop);
-  }
-
-  loop();
-</script>
+  <canvas id="game" width="256" height="192"></canvas>
+  <script src="pixel-scene.js"></script>
 </body>
 </html>
