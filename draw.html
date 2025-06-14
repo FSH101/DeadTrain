@@ -2,79 +2,117 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>32-битный пиксельный персонаж</title>
+  <title>Заброшенный вагон — Призрачная электричка</title>
   <style>
     body {
       margin: 0;
-      background-color: #1e1e1e;
+      background: #000;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
     }
-
     canvas {
       image-rendering: pixelated;
-      width: 320px; /* 10x масштаб от 32 */
-      height: 320px;
-      border: 2px solid #555;
-      background-color: #2a2a2a;
+      width: 512px;
+      height: 256px;
+      background: #000;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="32" height="32"></canvas>
-
+  <canvas id="wagon" width="256" height="128"></canvas>
   <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+    const c = document.getElementById('wagon'),
+          ctx = c.getContext('2d');
 
-    function drawPixel(x, y, color) {
+    const scale = 2;
+    const W = c.width, H = c.height;
+
+    function px(x,y,color) {
       ctx.fillStyle = color;
-      ctx.fillRect(x, y, 1, 1);
+      ctx.fillRect(x,y,1,1);
+    }
+
+    function drawBackground() {
+      // Стены
+      ctx.fillStyle = '#2a2a2a';
+      ctx.fillRect(0,0,W,H);
+
+      // Граффити
+      for(let i=0;i<5;i++){
+        const gx=20+i*45, gy=30 + ((i%2)*10);
+        ctx.fillStyle = i%2?'#ff4':'#f4f';
+        ctx.fillRect(gx,gy,10,5);
+      }
+
+      // Окна (разбиты)
+      for(let i=0;i<3;i++){
+        const wx=40+i*60, wy=10;
+        ctx.fillStyle = '#111';
+        ctx.fillRect(wx,wy,40,40);
+        // Разбитое стекло
+        ctx.strokeStyle='#444';
+        ctx.beginPath();
+        ctx.moveTo(wx,wy);
+        ctx.lineTo(wx+40,wy+40);
+        ctx.moveTo(wx+40,wy);
+        ctx.lineTo(wx,wy+40);
+        ctx.stroke();
+      }
+    }
+
+    function drawForest() {
+      for(let i=0;i<256;i+=8){
+        const h = 10 + Math.sin((i+Date.now()/200)%100)*5;
+        ctx.fillStyle = '#050';
+        ctx.fillRect(i, 50 + h, 4, H - (50 + h));
+      }
+    }
+
+    function drawFloorAndSeats() {
+      ctx.fillStyle = '#1d1d1d';
+      ctx.fillRect(0,H-20,W,20);
+      // сиденья
+      for(let i=0;i<4;i++){
+        const sx=20 + i*60;
+        ctx.fillStyle = '#444';
+        ctx.fillRect(sx,H-40,20,20);
+        ctx.fillStyle = '#666';
+        ctx.fillRect(sx,H-50,20,10);
+      }
     }
 
     function drawCharacter() {
-      ctx.clearRect(0, 0, 32, 32);
-
-      // Волосы
-      for (let x = 13; x <= 18; x++) drawPixel(x, 4, "#3b2e2a");
-
-      // Лицо
-      for (let y = 5; y <= 7; y++) {
-        for (let x = 13; x <= 18; x++) {
-          drawPixel(x, y, "#deb887");
-        }
-      }
-
-      // Глаза
-      drawPixel(14, 6, "#fff");
-      drawPixel(17, 6, "#fff");
-
-      // Тело (рубашка)
-      for (let y = 8; y <= 12; y++) {
-        for (let x = 12; x <= 19; x++) {
-          drawPixel(x, y, "#3a6ea5");
-        }
-      }
-
-      // Руки
-      drawPixel(11, 9, "#deb887");
-      drawPixel(20, 9, "#deb887");
-
-      // Штаны
-      for (let y = 13; y <= 15; y++) {
-        for (let x = 13; x <= 18; x++) {
-          drawPixel(x, y, "#333");
-        }
-      }
-
-      // Обувь
-      drawPixel(13, 16, "#999");
-      drawPixel(18, 16, "#999");
+      const x=120, y=H-40;
+      const sprite = [
+        "0011100",
+        "0111110",
+        "1111111",
+        "0111110",
+        "0011100",
+        "0111110",
+        "1010101",
+        "0011100"
+      ];
+      sprite.forEach((row, ry) => {
+        row.split('').forEach((pxv, rx) => {
+          if(pxv==='1') px(x+rx, y - sprite.length + ry, '#ddd');
+        });
+      });
     }
 
-    drawCharacter();
+    function drawScene(){
+      ctx.clearRect(0,0,W,H);
+      drawBackground();
+      drawForest();
+      drawFloorAndSeats();
+      drawCharacter();
+
+      requestAnimationFrame(drawScene);
+    }
+
+    drawScene();
   </script>
 </body>
 </html>
