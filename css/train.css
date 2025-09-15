@@ -1,34 +1,193 @@
-#train-container {
-    padding: 20px;
-    font-family: 'Segoe UI', sans-serif;
-    color: #f2f2f2;
-    animation: fadeIn 0.5s ease-in-out;
+:root {
+  --color-background: #0d0d0d;
+  --color-background-alt: #1a1a1a;
+  --color-panel: rgba(10, 10, 10, 0.78);
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-primary: #f0f0f0;
+  --color-secondary: #c8c8c8;
+  --color-accent: #b47cff;
+  --color-accent-dark: #5b2c89;
+  --shadow-elevated: 0 20px 45px rgba(0, 0, 0, 0.55);
 }
 
-.step-text, .step-question {
-    font-size: 18px;
-    margin-bottom: 20px;
-    animation: fadeInUp 0.6s ease-in-out;
+* {
+  box-sizing: border-box;
 }
 
-.option-btn, .next-btn {
-    display: block;
-    margin: 10px 0;
-    padding: 10px 15px;
-    font-size: 16px;
-    border: none;
-    border-radius: 6px;
-    background-color: #444;
-    color: #fff;
-    cursor: pointer;
-    transition: background 0.3s;
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Montserrat', 'Georgia', serif;
+  background: radial-gradient(circle at 20% 20%, rgba(51, 33, 68, 0.35), transparent 55%),
+    radial-gradient(circle at 80% 10%, rgba(24, 54, 80, 0.3), transparent 55%),
+    linear-gradient(to bottom, var(--color-background), var(--color-background-alt));
+  color: var(--color-primary);
+  position: relative;
+  overflow: hidden;
 }
 
-.option-btn:hover, .next-btn:hover {
-    background-color: #666;
+.background {
+  position: fixed;
+  inset: 0;
+  background-image: url('../IMG_7548.gif');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.18;
+  filter: saturate(40%);
+  transform: scale(1.05);
+  z-index: -2;
 }
 
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(10, 10, 10, 0.92), rgba(8, 20, 35, 0.6));
+  z-index: -1;
+}
+
+.overlay {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+}
+
+.story-panel {
+  width: min(680px, 100%);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 32px 36px;
+  box-shadow: var(--shadow-elevated);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+  animation: fadeIn 0.8s ease;
+}
+
+.wagon-title {
+  font-family: 'UnifrakturCook', cursive;
+  font-size: 2rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-secondary);
+  margin: 0;
+}
+
+.wagon-subtitle {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin: -0.6rem 0 0.8rem;
+  line-height: 1.4;
+}
+
+.step-text {
+  font-size: 1.15rem;
+  line-height: 1.8;
+  margin: 0;
+}
+
+.step-question {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin: 0;
+  font-weight: 600;
+}
+
+.step-note {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin: -0.2rem 0 0;
+  line-height: 1.5;
+}
+
+.story-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.story-actions--ending {
+  margin-top: 0.5rem;
+}
+
+.story-action {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding: 14px 22px;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  line-height: 1.4;
+  text-align: left;
+  color: var(--color-primary);
+  background: linear-gradient(135deg, rgba(180, 124, 255, 0.35), rgba(91, 44, 137, 0.35));
+  border: 1px solid rgba(180, 124, 255, 0.4);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+}
+
+.story-action:hover,
+.story-action:focus {
+  outline: none;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(91, 44, 137, 0.45);
+  background: linear-gradient(135deg, rgba(180, 124, 255, 0.55), rgba(91, 44, 137, 0.45));
+}
+
+.story-action:active {
+  transform: translateY(0);
+}
+
+.option-description {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.65);
+  margin-top: 0.45rem;
+}
+
+@media (max-width: 600px) {
+  .overlay {
+    padding: 32px 16px;
+  }
+
+  .story-panel {
+    padding: 28px 24px;
+    border-radius: 16px;
+    gap: 1.2rem;
+  }
+
+  .wagon-title {
+    font-size: 1.6rem;
+  }
+
+  .step-text {
+    font-size: 1.05rem;
+  }
+
+  .story-action {
+    font-size: 0.95rem;
+    padding: 12px 18px;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
