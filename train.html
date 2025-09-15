@@ -3,16 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Призрачная электричка — Путешествие</title>
+  <title>Призрачная электричка — Изометрия</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600&family=UnifrakturCook:wght@700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Montserrat:wght@300;600&display=swap"
+    rel="stylesheet"
+  />
   <link rel="stylesheet" href="css/train.css" />
 </head>
 <body>
-  <div class="background" aria-hidden="true"></div>
-  <div class="overlay">
-    <section id="train-container" class="story-panel" aria-live="polite"></section>
+  <div class="game-background" aria-hidden="true"></div>
+  <div class="game-overlay"></div>
+  <div class="game-wrapper">
+    <header class="hud" aria-live="polite">
+      <div class="hud__scene">
+        <h1 id="hud-scene-title" class="hud__title"></h1>
+        <p id="hud-scene-subtitle" class="hud__subtitle"></p>
+      </div>
+      <div id="hud-flags" class="hud__flags" aria-live="polite"></div>
+    </header>
+    <main class="game-main">
+      <div class="stage-shell">
+        <div class="iso-stage-wrapper">
+          <div id="iso-stage" class="iso-stage" aria-hidden="true"></div>
+        </div>
+        <div id="dialogue-panel" class="dialogue-panel dialogue-panel--hidden" aria-live="polite"></div>
+      </div>
+    </main>
   </div>
   <script type="module" src="js/main.js"></script>
 </body>

@@ -2,27 +2,32 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Призрачная электричка</title>
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Montserrat:wght@300;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Montserrat:wght@300;600&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="background-overlay"></div>
-  <div class="smoke"></div>
+  <div class="background-overlay" aria-hidden="true"></div>
+  <div class="smoke" aria-hidden="true"></div>
 
   <main class="title-screen">
-    <h1 class="game-title">Призрачная<br>электричка</h1>
-    <p class="subtitle">Найди путь через себя</p>
-    <button class="start-btn">Начать путешествие</button>
+    <h1 class="game-title">Призрачная электричка</h1>
+    <p class="subtitle">Пиксельное путешествие по поезду-призраку</p>
+    <button class="start-btn" type="button">Начать путешествие</button>
   </main>
 
   <script>
     document.querySelector('.start-btn').addEventListener('click', () => {
       document.body.classList.add('fade-out');
       setTimeout(() => {
-        window.location.href = "train.html"; // или другой экран
-      }, 1000);
+        window.location.href = 'train.html';
+      }, 600);
     });
   </script>
 </body>

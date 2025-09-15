@@ -1,99 +1,118 @@
-/* Reset */
+:root {
+  --color-background: #04060f;
+  --color-accent: #6f8bff;
+  --color-accent-dark: #304080;
+  --color-text: #f6f7ff;
+  --color-muted: rgba(202, 208, 240, 0.75);
+  --pixel-font: 'Press Start 2P', monospace;
+  --body-font: 'Montserrat', sans-serif;
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
-  font-family: 'Montserrat', sans-serif;
-  background: #000;
+  font-family: var(--body-font);
+  background: linear-gradient(180deg, #050812, #020309);
+  color: var(--color-text);
   overflow: hidden;
-  color: #fff;
 }
 
-/* Задний фон */
 .background-overlay {
   position: fixed;
-  top: 0; left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(ellipse at center, #0b0b0b 0%, #000000 100%);
-  z-index: -3;
-}
-
-/* Эффект дыма */
-.smoke {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  background: url('IMG_7548.gif') repeat;
-  opacity: 0.05;
-  animation: moveSmoke 60s linear infinite;
+  inset: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(48, 62, 128, 0.4), transparent 55%),
+    radial-gradient(circle at 70% 80%, rgba(120, 46, 140, 0.35), transparent 65%),
+    linear-gradient(140deg, rgba(10, 14, 28, 0.8), rgba(2, 3, 8, 0.9));
   z-index: -2;
 }
 
-@keyframes moveSmoke {
-  from { background-position: 0 0; }
-  to { background-position: 1000px 0; }
+.smoke {
+  position: fixed;
+  inset: 0;
+  background: url('IMG_7548.gif') repeat;
+  opacity: 0.08;
+  animation: moveSmoke 50s linear infinite;
+  mix-blend-mode: screen;
+  z-index: -1;
 }
 
-/* Заглавие */
+@keyframes moveSmoke {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 800px 0;
+  }
+}
+
 .title-screen {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
   text-align: center;
-  animation: fadeIn 2s ease-in-out;
+  gap: 1.8rem;
+  padding: 2rem;
 }
 
 .game-title {
-  font-family: 'UnifrakturCook', cursive;
-  font-size: 4rem;
-  color: #ccc;
-  text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
-  margin-bottom: 1rem;
+  font-family: var(--pixel-font);
+  font-size: clamp(1.2rem, 3vw + 0.8rem, 2.6rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: 0 6px 0 rgba(12, 16, 32, 0.7);
 }
 
 .subtitle {
-  font-size: 1.2rem;
-  color: #888;
-  margin-bottom: 2rem;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-/* Кнопка */
 .start-btn {
-  background: transparent;
-  border: 2px solid #999;
-  color: #ccc;
-  padding: 12px 32px;
-  font-size: 1rem;
-  border-radius: 5px;
+  position: relative;
+  font-family: var(--pixel-font);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 0.9rem 1.6rem;
+  color: var(--color-text);
+  background: rgba(36, 52, 110, 0.95);
+  border: 3px solid rgba(122, 150, 255, 0.85);
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  box-shadow: 0 12px 0 rgba(20, 30, 72, 0.9);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.start-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: #fff;
-  color: #fff;
+.start-btn:hover,
+.start-btn:focus-visible {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 0 rgba(32, 44, 96, 0.9);
 }
 
-/* Анимация появления */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
+.start-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 0 rgba(16, 24, 58, 0.9);
 }
 
-/* Анимация выхода */
 body.fade-out {
-  animation: fadeOut 1s forwards;
+  animation: fadeOut 0.6s forwards;
 }
 
 @keyframes fadeOut {
-  to { opacity: 0; }
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
 }

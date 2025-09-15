@@ -1,17 +1,28 @@
-import { story } from './data/story.js';
-import { StoryEngine } from './engine/storyEngine.js';
-import { DomRenderer } from './ui/domRenderer.js';
+import { GameController } from './game/gameController.js';
 
 function boot() {
-  const container = document.getElementById('train-container');
+  const stageElement = document.getElementById('iso-stage');
+  const dialogueElement = document.getElementById('dialogue-panel');
 
-  if (!container) {
-    throw new Error('Не удалось найти контейнер истории с id="train-container".');
+  if (!stageElement) {
+    throw new Error('Не найден контейнер изометрической сцены с id="iso-stage".');
   }
 
-  const engine = new StoryEngine(story);
-  const renderer = new DomRenderer(container, engine);
-  renderer.render();
+  if (!dialogueElement) {
+    throw new Error('Не найден контейнер диалогов с id="dialogue-panel".');
+  }
+
+  const controller = new GameController({
+    stageElement,
+    dialogueElement,
+    hud: {
+      title: document.getElementById('hud-scene-title'),
+      subtitle: document.getElementById('hud-scene-subtitle'),
+      flagList: document.getElementById('hud-flags'),
+    },
+  });
+
+  controller.start();
 }
 
 document.addEventListener('DOMContentLoaded', boot);
