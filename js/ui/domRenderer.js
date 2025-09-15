@@ -6,14 +6,25 @@ export class DomRenderer {
 
     this.container = container;
     this.engine = engine;
+    this.currentWagonId = null;
+    this._transitionCleanupHandle = null;
+    this._motionQuery = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(prefers-reduced-motion: reduce)')
+      : null;
+    this._wagonPositions = this._buildWagonPositions();
   }
 
   render() {
+    const previousWagonId = this.currentWagonId;
+
+    this._clearTransitionState();
     this.container.innerHTML = '';
     this.container.removeAttribute('data-wagon-id');
+    this.currentWagonId = null;
 
     if (!this.engine || this.engine.isFinished()) {
       this._renderFinishedState();
+      this._applyWagonTransition(previousWagonId, this.currentWagonId);
       return;
     }
 
@@ -22,11 +33,17 @@ export class DomRenderer {
 
     if (!node) {
       this._renderFinishedState();
+      this._applyWagonTransition(previousWagonId, this.currentWagonId);
       return;
     }
 
     if (wagon?.id) {
       this.container.dataset.wagonId = wagon.id;
+      this.currentWagonId = wagon.id;
+
+      if (!this._wagonPositions.has(wagon.id)) {
+        this._wagonPositions = this._buildWagonPositions();
+      }
     }
 
     if (wagon?.title) {
@@ -57,6 +74,8 @@ export class DomRenderer {
         this._renderUnknownNode(node);
         break;
     }
+
+    this._applyWagonTransition(previousWagonId, this.currentWagonId);
   }
 
   _renderTextNode(node) {
@@ -201,5 +220,106 @@ export class DomRenderer {
     button.className = 'story-action';
     button.textContent = label;
     return button;
+  }
+
+  _applyWagonTransition(previousWagonId, currentWagonId) {
+    if (!previousWagonId || !currentWagonId || previousWagonId === currentWagonId) {
+      return;
+    }
+
+    this._ensureWagonKnown(previousWagonId);
+    this._ensureWagonKnown(currentWagonId);
+
+    const direction = this._inferWagonDirection(previousWagonId, currentWagonId);
+    this._triggerWalkingAnimation(direction);
+  }
+
+  _triggerWalkingAnimation(direction) {
+    if (this._prefersReducedMotion()) {
+      return;
+    }
+
+    const directionClass = direction === 'back' ? 'story-panel--walk-back' : 'story-panel--walk-forward';
+    const classList = this.container.classList;
+
+    classList.remove('story-panel--walk-forward', 'story-panel--walk-back', 'story-panel--transitioning');
+
+    void this.container.offsetWidth;
+
+    classList.add('story-panel--transitioning', directionClass);
+
+    const expectedAnimation = direction === 'back' ? 'corridorWalkBack' : 'corridorWalkForward';
+
+    const clearClasses = () => {
+      classList.remove('story-panel--transitioning', 'story-panel--walk-forward', 'story-panel--walk-back');
+    };
+
+    const finishTransition = () => {
+      clearClasses();
+
+      if (this._transitionCleanupHandle !== null) {
+        clearTimeout(this._transitionCleanupHandle);
+        this._transitionCleanupHandle = null;
+      }
+    };
+
+    const handleAnimationEnd = (event) => {
+      if (event.target !== this.container || event.animationName !== expectedAnimation) {
+        return;
+      }
+
+      finishTransition();
+    };
+
+    this.container.addEventListener('animationend', handleAnimationEnd, { once: true });
+
+    if (this._transitionCleanupHandle !== null) {
+      clearTimeout(this._transitionCleanupHandle);
+    }
+
+    this._transitionCleanupHandle = setTimeout(() => {
+      clearClasses();
+      this._transitionCleanupHandle = null;
+    }, 1200);
+  }
+
+  _inferWagonDirection(previousId, nextId) {
+    const previousIndex = this._wagonPositions?.get(previousId);
+    const nextIndex = this._wagonPositions?.get(nextId);
+
+    if (previousIndex === undefined || nextIndex === undefined) {
+      return 'forward';
+    }
+
+    return nextIndex >= previousIndex ? 'forward' : 'back';
+  }
+
+  _clearTransitionState() {
+    if (this._transitionCleanupHandle !== null) {
+      clearTimeout(this._transitionCleanupHandle);
+      this._transitionCleanupHandle = null;
+    }
+
+    this.container.classList.remove('story-panel--transitioning', 'story-panel--walk-forward', 'story-panel--walk-back');
+  }
+
+  _prefersReducedMotion() {
+    return Boolean(this._motionQuery?.matches);
+  }
+
+  _ensureWagonKnown(wagonId) {
+    if (!wagonId || !this._wagonPositions) {
+      return;
+    }
+
+    if (!this._wagonPositions.has(wagonId)) {
+      this._wagonPositions = this._buildWagonPositions();
+    }
+  }
+
+  _buildWagonPositions() {
+    const wagons = this.engine?.story?.wagons ?? {};
+    const entries = Object.keys(wagons).map((id, index) => [id, index]);
+    return new Map(entries);
   }
 }
