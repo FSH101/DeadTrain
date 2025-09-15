@@ -1,406 +1,372 @@
 export const story = {
-  start: { wagonId: 'ghostAwakening', nodeId: 'wakeUp' },
+  start: { wagonId: 'ghostTrain', nodeId: 'wakeUp' },
   wagons: {
-    ghostAwakening: {
-      id: 'ghostAwakening',
-      title: 'Вагон 1: Призрачная электричка',
-      subtitle: 'Ты очнулся в ночной пригородной — но она, похоже, едет не по рельсам.',
+    ghostTrain: {
+      id: 'ghostTrain',
+      title: 'Вагон 1: Проснуться и не узнать путь',
+      subtitle: 'Ночная электричка едет туда, где станций нет.',
       nodes: {
         wakeUp: {
           type: 'text',
           content:
-            'Ты просыпаешься в тёмном вагоне электрички. Лампочки мигают в такт гулу трансформаторов. За окнами — не станции, а пустые поля тумана.',
-          next: 'firstCheck',
+            'Ты очнулся на жёстком сиденье. Вагон пуст. Лампы моргают. За окном — чёрная равнина без огней. Ты помнишь: ехал домой. Теперь — нет дома, нет времени.',
+          next: 'firstMove',
         },
-        firstCheck: {
+        firstMove: {
           type: 'choice',
-          prompt: 'Первое действие?',
+          prompt: 'Что сделаешь первым делом?',
           options: [
-            { text: 'Осмотреться', next: 'flicker' },
-            { text: 'Крикнуть «Эй!»', next: 'flicker' },
-            { text: 'Проверить телефон', next: 'flicker' },
+            { text: 'Встать и оглядеться', next: 'hum' },
+            { text: 'Крикнуть: «Есть кто живой?»', next: 'speakerReply' },
+            { text: 'Проверить телефон', next: 'deadPhone' },
           ],
         },
-        flicker: {
+        hum: {
           type: 'text',
           content:
-            'Экран телефона гаснет. По стеклу пробегают электрические «мурашки». Из глубины состава тянется низкий треск, словно кто-то шепчет через динамик.',
-          next: 'goDirection',
+            'Под потолком гудит трансформатор. Воздух пахнет озоном и мокрой шерстью. С переда вагона слышен тихий шорох, как бумага по стеклу.',
+          next: 'fork',
         },
-        goDirection: {
+        speakerReply: {
+          type: 'text',
+          content:
+            'Динамик трескается и отвечает чужим голосом: «Тихо едь — целым будешь». Голос смеётся сухо и отключается.',
+          next: 'fork',
+        },
+        deadPhone: {
+          type: 'text',
+          content:
+            'Экран чёрный. На миг вспыхивает индикатор — «0%» — и тухнет. В стекле отражается твоя бледная морда и пустой вагон позади.',
+          next: 'fork',
+        },
+        fork: {
           type: 'choice',
-          prompt: 'Куда двинешься?',
+          prompt: 'Куда пойдёшь?',
           options: [
-            { text: 'Вперёд — к пассажирам', next: 'toPassengers' },
-            { text: 'Назад — в служебный вагон', next: 'toService' },
-            { text: 'Дёрнуть стоп-кран', next: 'pullBrake' },
+            { text: 'Вперёд, к кабине машиниста', next: 'toEngine' },
+            { text: 'Назад, в служебный отсек', next: 'toService' },
+            { text: 'Между вагонами — посмотреть, что там', next: 'toGap' },
           ],
         },
-        pullBrake: {
-          type: 'text',
-          content:
-            'Ты дёргаешь стоп-кран. Рывок. Свет вспыхивает и тухнет. В тумане между вагонами что-то просыпается.',
-          next: 'toChase',
-        },
-        toPassengers: {
-          type: 'transition',
-          target: { wagonId: 'faceless', nodeId: 'entry' },
-        },
-        toService: {
-          type: 'transition',
-          target: { wagonId: 'service', nodeId: 'entry' },
-        },
-        toChase: {
-          type: 'transition',
-          target: { wagonId: 'chase', nodeId: 'entry' },
-        },
+        toEngine: { type: 'transition', target: { wagonId: 'engine', nodeId: 'entry' } },
+        toService: { type: 'transition', target: { wagonId: 'service', nodeId: 'entry' } },
+        toGap: { type: 'transition', target: { wagonId: 'chase', nodeId: 'entry' } },
       },
     },
 
     faceless: {
       id: 'faceless',
-      title: 'Вагон 2: Пассажиры без лиц',
-      subtitle: 'Их лица смазаны, как будто память стерла детали.',
+      title: 'Вагон 2: Пассажиры, которых не должно быть',
+      subtitle: 'Они сидят тихо. У некоторых нет лиц. У других — слова вместо лиц.',
       nodes: {
         entry: {
           type: 'text',
           content:
-            'На сиденьях — люди в старых пальто. Лица расплываются, как мокрые чернила. Динамик щёлкает и ловит шёпот: «Билеты… смысл… выход…»',
-          next: 'chooseNPC',
+            'Вагон не пуст. Люди в старых пальто. Лица смазаны, как мел по дождю. Никто не шевелится. Только глаза следят.',
+          next: 'choose',
         },
-        chooseNPC: {
+        choose: {
           type: 'choice',
-          prompt: 'К кому подойдёшь?',
+          prompt: 'К кому подойти?',
           options: [
-            { text: 'Женщина с чемоданом', next: 'woman' },
-            { text: 'Кондуктор без тени', next: 'conductor' },
-            { text: 'Ребёнок с фонариком', next: 'child' },
+            { text: 'Женщина с детской коляской', next: 'woman' },
+            { text: 'Контролёр в форменной фуражке', next: 'inspector' },
+            { text: 'Парень у двери, дрожащие руки', next: 'boy' },
           ],
         },
         woman: {
           type: 'text',
           content:
-            'Женщина гладит потрёпанный чемодан. «Опоздали… все опаздываем… но кто-то прибывает», — шепчет она.',
+            'Женщина держит пустую коляску. Голос ровный: «Укачала и потеряла. Если увидишь пустые двери — не смотри вниз».',
           next: 'womanChoice',
         },
         womanChoice: {
           type: 'choice',
-          prompt: 'Что спросишь?',
+          prompt: 'Спросить или уйти?',
           options: [
-            { text: 'Как найти выход?', next: 'womanHint' },
-            { text: 'Отойти', next: 'backHall' },
+            { text: 'Где выход?', next: 'womanHint' },
+            { text: 'Отойти', next: 'reselect' },
           ],
         },
         womanHint: {
           type: 'text',
           content:
-            '«Туда, где машинист разговаривает с тьмой. Если он признает тебя — двери вспомнят станцию».',
-          next: 'toEngine',
-        },
-        conductor: {
-          type: 'text',
-          content:
-            'Кондуктор протягивает компостер, но тень у его ног отсутствует. «Без билета всё равно проедете. Вопрос — до куда», — скрипит он.',
-          next: 'conductorChoice',
-        },
-        conductorChoice: {
-          type: 'choice',
-          prompt: 'Твои действия?',
-          options: [
-            { text: 'Попросить провести к выходу', next: 'conductorHint' },
-            { text: 'Протянуть несуществующий билет', next: 'ticket' },
-            { text: 'Уйти от него', next: 'backHall' },
-          ],
-        },
-        conductorHint: {
-          type: 'text',
-          content:
-            '«Ищи служебный вагон. Электрика любит порядок. Если угадаешь последовательность — двери подчинятся».',
+            '«Кабина. Но ключ — у железа. Железо любит порядок: буфер — шина — блокировка. Запомнил?»',
           next: 'toService',
         },
-        ticket: {
+        inspector: {
           type: 'text',
           content:
-            'Ты тянешь воздух. Кондуктор усмехается: «Пустой билет для пустых людей». Лампы мигают, за спиной шуршит туман.',
-          next: 'toChase',
+            'Контролёр не поднимает глаз: «Билеты не нужны. Нужны ответы. Один правильный — и живой. Остальные — корм».',
+          next: 'inspectorChoice',
         },
-        child: {
-          type: 'text',
-          content:
-            'Мальчик протягивает маленький фонарик. «Он светит не вперёд, а внутрь. Берёшь?»',
-          next: 'childChoice',
-        },
-        childChoice: {
+        inspectorChoice: {
           type: 'choice',
-          prompt: 'Что сделать?',
+          prompt: 'Что скажешь?',
           options: [
-            { text: 'Взять фонарик', next: 'flashlight' },
-            { text: 'Отказаться', next: 'backHall' },
+            { text: 'Проведи к кабине', next: 'inspectorGuide' },
+            { text: 'Мне нужен ключ', next: 'inspectorKey' },
+            { text: 'Отойти', next: 'reselect' },
           ],
         },
-        flashlight: {
+        inspectorGuide: {
           type: 'text',
           content:
-            'Фонарик тёплый, но луч направлен в стекло — и в отражении ты выглядишь смелее. «Служебный щиток любит такой свет», — шепчет ребёнок.',
+            '«Иди сам. Я уже ходил». Он поднимает глаза. В зрачках — чёрные станции без названий.',
+          next: 'reselect',
+        },
+        inspectorKey: {
+          type: 'text',
+          content:
+            '«Ключ — не вещь. Ключ — последовательность». Он кивает в сторону служебного отсека.',
           next: 'toService',
         },
-        backHall: {
+        boy: {
           type: 'text',
-          content: 'Ты отступаешь в проход. Вагон дышит холодом.',
-          next: 'rechoose',
+          content:
+            'Парень шепчет, не глядя на тебя: «Тут бегают. Если услышишь много шагов — не стой. Держись света». Он протягивает маленький фонарик.',
+          next: 'boyChoice',
         },
-        rechoose: {
+        boyChoice: {
           type: 'choice',
-          prompt: 'Куда дальше?',
+          prompt: 'Взять фонарик?',
           options: [
-            { text: 'Поговорить с кем-то ещё', next: 'chooseNPC' },
-            { text: 'Идти к кабине машиниста', next: 'toEngine' },
-            { text: 'Вернуться в служебный вагон', next: 'toService' },
+            { text: 'Взять', next: 'takeLight' },
+            { text: 'Не брать', next: 'reselect' },
           ],
         },
-        toEngine: {
-          type: 'transition',
-          target: { wagonId: 'engine', nodeId: 'entry' },
+        takeLight: {
+          type: 'text',
+          content:
+            'Фонарик лёгкий. Свет короткий, но честный. «Служебный щиток отзывается на такой свет», — шепчет парень.',
+          next: 'toService',
         },
-        toService: {
-          type: 'transition',
-          target: { wagonId: 'service', nodeId: 'entry' },
+        reselect: {
+          type: 'choice',
+          prompt: 'Дальше?',
+          options: [
+            { text: 'Поговорить с кем-то ещё', next: 'choose' },
+            { text: 'Идти к кабине', next: 'toEngine' },
+            { text: 'Назад, в служебный', next: 'toService' },
+          ],
         },
-        toChase: {
-          type: 'transition',
-          target: { wagonId: 'chase', nodeId: 'entry' },
-        },
+        toService: { type: 'transition', target: { wagonId: 'service', nodeId: 'entry' } },
+        toEngine: { type: 'transition', target: { wagonId: 'engine', nodeId: 'entry' } },
       },
     },
 
     service: {
       id: 'service',
       title: 'Вагон 3: Служебный отсек',
-      subtitle: 'Щитки, кабели, запах озона. Здесь электричка решает, кто свой.',
+      subtitle: 'Щитки, провода, таблички. Здесь электричка слушает команды.',
       nodes: {
         entry: {
           type: 'text',
           content:
-            'Ты входишь в служебный вагон. Металлический щиток с тумблерами, табличка «АВАРИЙНОЕ ПИТАНИЕ», рядом шкаф с кабелями.',
-          next: 'panel',
-        },
-        panel: {
-          type: 'text',
-          content:
-            'Подписи на тумблерах: «Жёлтый — буфер», «Зелёный — шина», «Красный — блокировка». Динамик щёлкает — кто-то слушает.',
+            'Металлический шкаф, тумблеры с тугим ходом. Таблички: «ЖЁЛТЫЙ — БУФЕР», «ЗЕЛЁНЫЙ — ШИНА», «КРАСНЫЙ — БЛОКИРОВКА». За стенкой будто шоркают когти.',
           next: 'panelChoice',
         },
         panelChoice: {
           type: 'choice',
-          prompt: 'Твои действия у щитка:',
+          prompt: 'Что сделать?',
           options: [
-            { text: 'Ввести последовательность питания', next: 'sequence' },
+            { text: 'Ввести последовательность', next: 'sequence' },
             { text: 'Открыть шкаф с проводами', next: 'wires' },
-            { text: 'Уйти обратно к людям', next: 'toPassengers' },
+            { text: 'Уйти к пассажирам', next: 'toFaceless' },
           ],
         },
         sequence: {
           type: 'choice',
-          prompt: 'Какая последовательность?',
-          description: 'Подсказка мелькала в надписях: буфер → шина → блокировка.',
+          prompt: 'Какую?',
+          description: 'Вспомни: буфер → шина → блокировка.',
           options: [
-            { text: 'Зелёный — Жёлтый — Красный', next: 'wrongSeq' },
-            { text: 'Жёлтый — Зелёный — Красный', next: 'override' },
-            { text: 'Красный — Жёлтый — Зелёный', next: 'wrongSeq2' },
+            { text: 'Жёлтый — Зелёный — Красный', next: 'goodSeq' },
+            { text: 'Зелёный — Жёлтый — Красный', next: 'badSeq' },
+            { text: 'Красный — Жёлтый — Зелёный', next: 'badSeq2' },
           ],
         },
-        override: {
+        goodSeq: {
           type: 'text',
           content:
-            'Щиток поёт. Замки щёлкают где-то впереди. Голос из динамика: «Признан». Поезд на секунду совпадает с реальностью.',
+            'Щиток щёлкает. Где-то впереди отпираются двери. Динамик говорит твоим голосом: «Принят». На секунду поезд цепляется за реальность.',
           next: 'toQuickExit',
         },
-        wrongSeq: {
+        badSeq: {
           type: 'text',
           content:
-            'Треск. Лампы уходят в инфракрасную темноту. Из-под пола течёт холодный туман.',
+            'Свет тухнет до темноты под кожей. Из-под пола ползёт холодный туман. Что-то просыпается.',
           next: 'toChase',
         },
-        wrongSeq2: {
+        badSeq2: {
           type: 'text',
           content:
-            'Красный вперёд — плохая примета. По вагону ползёт шёпот: «Непорядок».',
+            'Красный первым — и поезд злится. Металл поёт, как нож по стеклу.',
           next: 'toChase',
         },
         wires: {
           type: 'text',
           content:
-            'Ты открываешь шкаф. Там — обрезанные жилы и следы когтей. Что-то шевелится за перегородкой.',
+            'Внутри — обрезанные жилы. На изоляции следы зубов. Из щели тянется горячее дыхание.',
           next: 'toChase',
         },
-        toPassengers: {
-          type: 'transition',
-          target: { wagonId: 'faceless', nodeId: 'entry' },
-        },
-        toChase: {
-          type: 'transition',
-          target: { wagonId: 'chase', nodeId: 'entry' },
-        },
-        toQuickExit: {
-          type: 'transition',
-          target: { wagonId: 'escape', nodeId: 'quick' },
-        },
+        toFaceless: { type: 'transition', target: { wagonId: 'faceless', nodeId: 'entry' } },
+        toChase: { type: 'transition', target: { wagonId: 'chase', nodeId: 'entry' } },
+        toQuickExit: { type: 'transition', target: { wagonId: 'escape', nodeId: 'quick' } },
       },
     },
 
     chase: {
       id: 'chase',
-      title: 'Вагон 4: Преследование',
-      subtitle: 'Туман собирается в зверя, у которого очень много рук.',
+      title: 'Вагон 4: Когда бегут не ноги, а страх',
+      subtitle: 'Шагов много. Они не твои.',
       nodes: {
         entry: {
           type: 'text',
           content:
-            'Из тумана между вагонами вырастает фигура — как будто из проводов и гари. Она движется рывками и знает твой запах.',
+            'Между вагонами вырастает фигура. Скелет из проводов, руки длинные, как поручни. Пахнет гарью и болотом. Она наклоняет голову. Слышит сердце.',
           next: 'runChoice',
         },
         runChoice: {
           type: 'choice',
-          prompt: 'Что делаешь?',
+          prompt: 'Действие?',
           options: [
-            { text: 'Бежать вперёд по составу', next: 'sprint' },
-            { text: 'Спрятаться под сиденьями', next: 'hide' },
-            { text: 'Дёрнуть стоп-кран и затаиться', next: 'brake' },
+            { text: 'Бежать вперёд', next: 'sprint' },
+            { text: 'Под сиденья — спрятаться', next: 'hide' },
+            { text: 'Дёрнуть стоп-кран', next: 'brake' },
           ],
         },
         sprint: {
           type: 'text',
           content:
-            'Ты несёшься по скрипящим сочленениям. Тварь цепляется за поручни, но отстаёт.',
+            'Ты летишь по проходу. Существо цепляется, скрипит, отстаёт. Впереди — дверь в кабину.',
           next: 'toEngine',
         },
         hide: {
           type: 'text',
           content:
-            'Ты замираешь под сиденьем. Существо шарит когтями по обивке, но проходит мимо. Воздух пахнет ржавчиной и ладаном.',
-          next: 'backToPassengers',
+            'Ты замираешь под сиденьем. Руки с когтями шарят по ткани. Останавливаются в сантиметре. Уходят. Горло отпускает.',
+          next: 'toFaceless',
         },
         brake: {
           type: 'ending',
           content:
-            'Ты дёргаешь стоп-кран. Поезд встаёт рывком — и падает в пустоту. Ты слышишь, как рвётся металл, а потом только гул в голове.',
-          note: 'Иногда остановка — не выход.',
+            'Ты дёргаешь стоп-кран. Поезд глохнет и сваливается в пустоту. Долго падает. Звук обрывается, как нитка.',
+          note: 'Остановить — не значит спастись.',
           actions: [
-            { text: 'Попробовать снова', target: 'start' },
-            { text: 'Сдаться тьме', target: null },
+            { text: 'Начать заново', target: 'start' },
+            { text: 'Больше не сопротивляться', target: null },
           ],
         },
-        toEngine: {
-          type: 'transition',
-          target: { wagonId: 'engine', nodeId: 'entry' },
-        },
-        backToPassengers: {
-          type: 'transition',
-          target: { wagonId: 'faceless', nodeId: 'entry' },
-        },
+        toEngine: { type: 'transition', target: { wagonId: 'engine', nodeId: 'entry' } },
+        toFaceless: { type: 'transition', target: { wagonId: 'faceless', nodeId: 'entry' } },
       },
     },
 
     engine: {
       id: 'engine',
-      title: 'Вагон 5: Кабина машиниста',
-      subtitle: 'Тут ведут переговоры ночь и рельсы.',
+      title: 'Вагон 5: Кабина',
+      subtitle: 'Где рельсы спорят с ночью.',
       nodes: {
         entry: {
           type: 'text',
           content:
-            'Дверь в кабину приоткрыта. Внутри — силуэт машиниста. Лицо скрыто полумраком, а из-под кепки светится тонкая полоса неоновых глаз.',
-          next: 'specter',
+            'Дверь в кабину приоткрыта. Машинист сидит, руки на коленях. Лица не видно. Кепка закрывает глаза. Приборы гудят сами.',
+          next: 'talk',
         },
-        specter: {
+        talk: {
           type: 'text',
           content:
-            '«Опять ты», — скрипит он, не оборачиваясь. Стрелки приборов вращаются сами по себе. Снаружи по боковому стеклу течёт туман.',
+            'Он говорит, не оборачиваясь: «Опять доехал. Опять забыл, где сходить». Голос уставший, как пустой перрон.',
           next: 'talkChoice',
         },
         talkChoice: {
           type: 'choice',
-          prompt: 'Что скажешь?',
+          prompt: 'Ответ:',
           options: [
-            { text: 'Кто ты?', next: 'identity' },
-            { text: 'Отпусти меня', next: 'release' },
-            { text: 'Молчать и смотреть', next: 'silent' },
+            { text: 'Кто ты?', next: 'who' },
+            { text: 'Мне нужен выход', next: 'out' },
+            { text: 'Молчать', next: 'silent' },
           ],
         },
-        identity: {
+        who: {
           type: 'text',
           content:
-            '«Я — маршрут, который ты отвернул. Если выдержишь вопрос — выберешься».',
+            '«Я машинист тех дорог, откуда не возвращаются. Но у тебя — редкий билет. Вопрос выдержишь — выйдешь».',
           next: 'riddle',
         },
-        release: {
+        out: {
           type: 'text',
           content:
-            '«Двери слушаются не просьб, а смысла. Покажи, что видишь рассвет».',
+            '«Двери открываются смыслом. Покажи, что понял».',
           next: 'riddle',
         },
         silent: {
           type: 'text',
           content:
-            'Он усмехается. «Тишина — тоже ответ. Но сейчас — вопрос».',
+            '«Ладно. Тогда коротко».',
           next: 'riddle',
         },
         riddle: {
           type: 'choice',
           prompt:
-            '«Поезд идёт без колёс, машиниста ведёт без руля. Чем к утру становится ночь?»',
+            '«Ночь катится без колёс, а утро приходит без шагов. Чем к утру становится ночь?»',
           options: [
-            { text: 'Пеплом', next: 'expel' },
-            { text: 'Памятью', next: 'expel' },
-            { text: 'Рассветом', next: 'permit' },
+            { text: 'Пеплом', next: 'wrong' },
+            { text: 'Памятью', next: 'wrong' },
+            { text: 'Рассветом', next: 'right' },
           ],
         },
-        permit: {
+        right: {
           type: 'text',
           content:
-            'Машинист кивает. «Видишь». За дверью щёлкают замки, состав выравнивается, и на мгновение ты слышишь реальный глухой стук стыков.',
+            'Он кивает. «Значит, видишь». Где-то щёлкают замки. Поезд на секунду звучит настоящими стыками.',
           next: 'toLongExit',
         },
-        expel: {
+        wrong: {
           type: 'text',
           content:
-            'Стрелки приборов прыгают. «Не сегодня». Сквозняк вышвыривает тебя обратно в гул вагонов.',
+            'Машинист тяжело вздыхает: «Не сегодня». Сквозняк вышвыривает тебя обратно в тёмный состав.',
           next: 'toChase',
         },
-        toLongExit: {
-          type: 'transition',
-          target: { wagonId: 'escape', nodeId: 'long' },
-        },
-        toChase: {
-          type: 'transition',
-          target: { wagonId: 'chase', nodeId: 'entry' },
-        },
+        toLongExit: { type: 'transition', target: { wagonId: 'escape', nodeId: 'long' } },
+        toChase: { type: 'transition', target: { wagonId: 'chase', nodeId: 'entry' } },
       },
     },
 
     escape: {
       id: 'escape',
       title: 'Вагон 6: Выход',
-      subtitle: 'Двери помнят станции, если ты помнишь себя.',
+      subtitle: 'Если понял — двери вспомнят станцию.',
       nodes: {
         quick: {
           type: 'ending',
           content:
-            'Двери в ближайшем тамбуре раздвигаются, и вместо пустоты — платформа-призрак. Табло мигает твоим именем. Ты ступаешь на бетон, и холод рассеивается.',
+            'Тамбурные двери разъезжаются. Вместо пустоты — тусклая платформа. Табло мигает твоей фамилией. Ты выходишь. Воздух холодный и настоящий.',
           actions: [
-            { text: 'Вернуться к началу', target: 'start' },
-            { text: 'Исчезнуть в тумане', target: null },
+            { text: 'Сыграть иначе', target: 'start' },
+            { text: 'Остаться на платформе', target: null },
           ],
         },
         long: {
           type: 'ending',
           content:
-            'Кабина распахивается. Впереди — станция, где ты однажды не сошёл. Теперь сходишь. Утро входит в лёгкие, и электричка отходит пустой.',
+            'Кабина открывается. Впереди — станция, где ты когда-то прошёл мимо. Теперь — выходишь. Поезд уходит пустой, а в небе сереет.',
           actions: [
-            { text: 'Прожить это ещё раз', target: 'start' },
-            { text: 'Остаться на рассвете', target: null },
+            { text: 'Прожить ещё раз', target: 'start' },
+            { text: 'Идти к свету', target: null },
           ],
         },
+      },
+    },
+
+    hub: {
+      id: 'hub',
+      title: 'Развилка',
+      subtitle: 'Если вернёшься, маршрут изменится.',
+      nodes: {
+        toFaceless: { type: 'transition', target: { wagonId: 'faceless', nodeId: 'entry' } },
+        toService: { type: 'transition', target: { wagonId: 'service', nodeId: 'entry' } },
+        toEngine: { type: 'transition', target: { wagonId: 'engine', nodeId: 'entry' } },
       },
     },
   },
