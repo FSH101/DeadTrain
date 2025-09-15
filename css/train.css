@@ -67,7 +67,82 @@ body::after {
   display: flex;
   flex-direction: column;
   gap: 1.6rem;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  will-change: transform;
   animation: fadeIn 0.8s ease;
+}
+
+.story-panel > * {
+  position: relative;
+  z-index: 2;
+}
+
+.story-panel::before,
+.story-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.story-panel::before {
+  top: 45%;
+  bottom: -35%;
+  left: -15%;
+  right: -15%;
+  background: radial-gradient(
+      70% 55% at 50% 30%,
+      rgba(180, 124, 255, 0.35),
+      rgba(44, 20, 70, 0.75) 55%,
+      rgba(12, 10, 20, 0.92) 90%
+    );
+  filter: blur(2px);
+  transform-origin: center bottom;
+  z-index: 1;
+}
+
+.story-panel::after {
+  background:
+      linear-gradient(120deg, rgba(40, 20, 70, 0.85), rgba(6, 10, 20, 0.1) 45%, transparent 70%),
+      repeating-linear-gradient(
+        90deg,
+        rgba(220, 190, 255, 0.32) 0%,
+        rgba(220, 190, 255, 0.12) 10%,
+        rgba(30, 10, 60, 0.3) 16%,
+        rgba(0, 0, 0, 0) 22%
+      );
+  mix-blend-mode: screen;
+  filter: blur(0.8px);
+  z-index: 3;
+}
+
+.story-panel--transitioning {
+  will-change: transform;
+}
+
+.story-panel--walk-forward {
+  animation: fadeIn 0.5s ease, corridorWalkForward 0.9s ease;
+}
+
+.story-panel--walk-back {
+  animation: fadeIn 0.5s ease, corridorWalkBack 0.9s ease;
+}
+
+.story-panel--walk-forward::before,
+.story-panel--walk-back::before {
+  animation: corridorFloor 0.9s ease forwards;
+}
+
+.story-panel--walk-forward::after {
+  animation: corridorLightsForward 0.9s ease forwards;
+}
+
+.story-panel--walk-back::after {
+  animation: corridorLightsBack 0.9s ease forwards;
 }
 
 .wagon-title {
@@ -178,6 +253,114 @@ body::after {
   .story-action {
     font-size: 0.95rem;
     padding: 12px 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-panel,
+  .story-panel--walk-forward,
+  .story-panel--walk-back {
+    animation: none !important;
+  }
+
+  .story-panel::before,
+  .story-panel::after {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+}
+
+@keyframes corridorWalkForward {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  20% {
+    transform: translate3d(12px, -6px, 0);
+  }
+  40% {
+    transform: translate3d(-10px, 4px, 0);
+  }
+  60% {
+    transform: translate3d(8px, -5px, 0);
+  }
+  80% {
+    transform: translate3d(-5px, 3px, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes corridorWalkBack {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  20% {
+    transform: translate3d(-12px, -6px, 0);
+  }
+  40% {
+    transform: translate3d(10px, 4px, 0);
+  }
+  60% {
+    transform: translate3d(-8px, -5px, 0);
+  }
+  80% {
+    transform: translate3d(5px, 3px, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes corridorFloor {
+  0% {
+    opacity: 0;
+    transform: translateY(30%) scaleY(0.7);
+  }
+  20% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.42;
+    transform: translateY(15%) scaleY(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(0) scaleY(1);
+  }
+}
+
+@keyframes corridorLightsForward {
+  0% {
+    opacity: 0;
+    transform: translateX(50%);
+  }
+  15% {
+    opacity: 0.35;
+  }
+  45% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-70%);
+  }
+}
+
+@keyframes corridorLightsBack {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%);
+  }
+  15% {
+    opacity: 0.35;
+  }
+  45% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(70%);
   }
 }
 
