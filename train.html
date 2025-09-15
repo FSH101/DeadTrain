@@ -2,88 +2,18 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Призрачная электричка</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Призрачная электричка — Путешествие</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600&family=UnifrakturCook:wght@700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/train.css" />
-  <style>
-    /* Минималистичный визуал — можешь расширять */
-
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Georgia', serif;
-      background: linear-gradient(to bottom, #0d0d0d, #1a1a1a);
-      color: #f0f0f0;
-      overflow: hidden;
-    }
-
-    .background {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background-image: url('IMG_7548.gif'); /* подложка, если есть */
-      background-size: cover;
-      opacity: 0.2;
-      z-index: -1;
-    }
-
-    .overlay {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      padding: 40px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      box-sizing: border-box;
-    }
-
-    #train-container {
-      background: rgba(0, 0, 0, 0.7);
-      padding: 30px;
-      border-radius: 15px;
-      max-width: 600px;
-      width: 100%;
-      animation: fadeIn 0.8s ease;
-    }
-
-    .step-text, .step-question {
-      font-size: 20px;
-      margin-bottom: 25px;
-    }
-
-    .option-btn, .next-btn {
-      display: block;
-      margin-top: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
-      background: #222;
-      border: 1px solid #444;
-      color: #f0f0f0;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .option-btn:hover, .next-btn:hover {
-      background: #444;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
 </head>
 <body>
-
-  <div class="background"></div>
-
+  <div class="background" aria-hidden="true"></div>
   <div class="overlay">
-    <div id="train-container">
-      <!-- Контент вагона будет подгружаться сюда -->
-    </div>
+    <section id="train-container" class="story-panel" aria-live="polite"></section>
   </div>
-
-  <script src="js/train.js"></script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
