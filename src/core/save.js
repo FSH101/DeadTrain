@@ -1,11 +1,15 @@
 /** @typedef {import('../game/GameState.js').GameRuntimeState} GameRuntimeState */
 /** @typedef {import('../types.js').GameSaveData} GameSaveData */
 
+import { createLogger } from './logging.js';
+
 const STORAGE_PREFIX = 'dead-train-save';
 
 const buildKey = (userId) => `${STORAGE_PREFIX}:${userId}`;
 
 const storage = typeof window !== 'undefined' ? window.localStorage : undefined;
+
+const logger = createLogger('core.save');
 
 export const loadSave = (userId) => {
   if (!storage) {
@@ -19,7 +23,7 @@ export const loadSave = (userId) => {
     const data = JSON.parse(raw);
     return data;
   } catch (error) {
-    console.error('Failed to parse save data', error);
+    logger.error('Failed to parse save data', { userId, error });
     return null;
   }
 };
@@ -31,7 +35,7 @@ export const persistSave = (userId, data) => {
   try {
     storage.setItem(buildKey(userId), JSON.stringify(data));
   } catch (error) {
-    console.error('Failed to write save data', error);
+    logger.error('Failed to write save data', { userId, error });
   }
 };
 

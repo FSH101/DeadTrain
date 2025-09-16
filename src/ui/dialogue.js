@@ -2,6 +2,8 @@
 /** @typedef {import('../types.js').DialogueNode} DialogueNode */
 /** @typedef {import('../types.js').DialogueScript} DialogueScript */
 
+import { createLogger } from '../core/logging.js';
+
 /**
  * @typedef {Object} DialogueHandlers
  * @property {(node: DialogueNode, choice?: DialogueChoice) => string | null} onAdvance
@@ -25,6 +27,7 @@ export class DialogueController {
     this.currentScript = null;
     this.handlers = null;
     this.currentNodeId = null;
+    this.logger = createLogger('ui.dialogue');
   }
 
   open(script, startId, handlers) {
@@ -49,7 +52,7 @@ export class DialogueController {
     }
     const node = this.currentScript.nodes.find((entry) => entry.id === this.currentNodeId);
     if (!node) {
-      console.error('Dialogue node not found', this.currentNodeId);
+      this.logger.error('Dialogue node not found', { nodeId: this.currentNodeId });
       this.close();
       return;
     }

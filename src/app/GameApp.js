@@ -15,6 +15,7 @@ import { FadeController } from '../ui/fade.js';
 import { ErrorScreen } from '../ui/error.js';
 import { DebuggerOverlay } from '../ui/debugger.js';
 import { InteractionSystem } from '../systems/InteractionSystem.js';
+import { createLogger } from '../core/logging.js';
 
 const GAME_CONFIG = {
   virtualWidth: 360,
@@ -22,6 +23,8 @@ const GAME_CONFIG = {
   tileWidth: 128,
   tileHeight: 64,
 };
+
+const logger = createLogger('game.app');
 
 export class GameApp {
   constructor(canvas, overlayRoot, overlays) {
@@ -58,9 +61,11 @@ export class GameApp {
       startWagon: wagon.id,
       targets: this.state.currentTargets.length,
     });
+    logger.debug('GameApp constructed', { wagonId: wagon.id });
   }
 
   async init() {
+    logger.info('Game initialization started');
     this.debug.log('game.init.start');
     this.errorScreen.hide();
     try {
@@ -71,8 +76,7 @@ export class GameApp {
         hasInitData: Boolean(ctx.initDataRaw),
       });
       await this.guard('Проверка данных сессии', () => this.verifyInitData(ctx.initDataRaw));
-      await this.guard('Инииализация аудио', () => this.audio.init());
-      await this.guard('Запуск фонового звука', () => this.audio.playAmbient('train'));
+      await this.guard('Инициализация аудио', () => this.audio.init());
       await this.guard('Подготовка систем взаимодействия', () => {
         this.interaction = new InteractionSystem({
           state: this.state,
@@ -98,6 +102,7 @@ export class GameApp {
       this.startLoop();
       this.debug.setStatus('Игра запущена');
       this.debug.log('game.init.complete');
+      logger.info('Game initialization completed successfully');
     } catch (error) {
       this.handleFatalError(error, 'инициализация');
       throw error;
@@ -127,7 +132,7 @@ export class GameApp {
         inventory: Object.keys(save.inventory ?? {}).length,
       });
     } catch (error) {
-      console.error('Failed to restore save', error);
+      logger.error('Failed to restore save', error);
       this.debug.log('save.restore.error', error instanceof Error ? error : String(error), 'warn');
       this.toast.show('Сохранение повреждено. Начинаем заново.');
     }
@@ -189,10 +194,10 @@ export class GameApp {
     this.state.player.isMoving = false;
     this.state.marker.visible = false;
     this.buildTargetsForWagon(wagon);
-    await this.audio.playAmbient(wagon.ambient === 'dark' ? 'dark' : 'train');
     await this.fade.fadeIn();
     this.saveGame();
     this.debug.log('travel.complete', { wagonId, spawnPoint });
+    logger.info('Player travelled to wagon', { wagonId, spawnPoint });
   }
 
   saveGame() {
@@ -211,9 +216,10 @@ export class GameApp {
       });
       if (response.status !== 200) {
         this.toast.show('Не удалось проверить сессию Telegram.');
+        logger.warn('Telegram initData validation failed', { status: response.status });
       }
     } catch (error) {
-      console.error('InitData validation failed', error);
+      logger.warn('InitData validation encountered an error', error);
       this.toast.show('Проверка Telegram недоступна.');
       this.debug.log('telegram.validation.failed', error instanceof Error ? error : String(error), 'warn');
     }
@@ -236,6 +242,7 @@ export class GameApp {
       this.loopHandle = requestAnimationFrame(tick);
     };
     this.loopHandle = requestAnimationFrame(tick);
+    logger.debug('Game loop started');
   }
 
   destroy() {
@@ -246,6 +253,7 @@ export class GameApp {
     if (this.inputRouter) {
       this.inputRouter.detach();
     }
+    logger.info('GameApp destroyed');
   }
 
   async guard(stage, task) {
@@ -258,6 +266,7 @@ export class GameApp {
     } catch (error) {
       this.debug.setStatus(`Ошибка: ${stage}`, 'error');
       this.debug.log('stage.error', { stage, error: this.describeError(error) }, 'error');
+      logger.error('Stage execution failed', { stage, error });
       throw error;
     }
   }
@@ -269,7 +278,7 @@ export class GameApp {
     this.fatalError = true;
     this.destroy();
     const normalized = this.describeError(error);
-    console.error(`Fatal error during ${stage}`, error);
+    logger.error(`Fatal error during ${stage}`, error);
     this.debug.setStatus(`Критическая ошибка: ${stage}`, 'error');
     this.debug.log('fatal', { stage, error: normalized }, 'error');
     this.errorScreen.show({
