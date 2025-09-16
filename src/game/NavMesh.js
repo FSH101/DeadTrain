@@ -1,8 +1,9 @@
-import type { IsoPoint, NavNode } from '../types';
+/** @typedef {import('../types.js').IsoPoint} IsoPoint */
+/** @typedef {import('../types.js').NavNode} NavNode */
 
-const keyOf = (point: IsoPoint): string => `${Math.round(point.x)}:${Math.round(point.y)}`;
+const keyOf = (point) => `${Math.round(point.x)}:${Math.round(point.y)}`;
 
-const neighborOffsets: IsoPoint[] = [
+const neighborOffsets = [
   { x: 1, y: 0 },
   { x: -1, y: 0 },
   { x: 0, y: 1 },
@@ -12,9 +13,8 @@ const neighborOffsets: IsoPoint[] = [
 ];
 
 export class NavMesh {
-  private readonly nodes = new Map<string, NavNode>();
-
-  constructor(points: IsoPoint[]) {
+  constructor(points) {
+    this.nodes = new Map();
     points.forEach((point) => {
       const key = keyOf(point);
       if (!this.nodes.has(key)) {
@@ -34,13 +34,13 @@ export class NavMesh {
     });
   }
 
-  findNearest(point: IsoPoint): NavNode | null {
+  findNearest(point) {
     const rounded = { x: Math.round(point.x), y: Math.round(point.y) };
     const node = this.nodes.get(keyOf(rounded));
     if (node) {
       return node;
     }
-    let best: NavNode | null = null;
+    let best = null;
     let bestDist = Number.POSITIVE_INFINITY;
     this.nodes.forEach((candidate) => {
       const dx = candidate.point.x - point.x;
@@ -54,7 +54,7 @@ export class NavMesh {
     return best;
   }
 
-  findPath(from: IsoPoint, to: IsoPoint): IsoPoint[] {
+  findPath(from, to) {
     const start = this.findNearest(from);
     const end = this.findNearest(to);
     if (!start || !end) {
@@ -63,9 +63,9 @@ export class NavMesh {
     if (start.id === end.id) {
       return [end.point];
     }
-    const queue: string[] = [start.id];
-    const visited = new Set<string>([start.id]);
-    const cameFrom = new Map<string, string | null>();
+    const queue = [start.id];
+    const visited = new Set([start.id]);
+    const cameFrom = new Map();
     cameFrom.set(start.id, null);
 
     while (queue.length > 0) {
@@ -90,8 +90,8 @@ export class NavMesh {
       });
     }
 
-    const path: IsoPoint[] = [];
-    let current: string | null = end.id;
+    const path = [];
+    let current = end.id;
     while (current) {
       const node = this.nodes.get(current);
       if (!node) {

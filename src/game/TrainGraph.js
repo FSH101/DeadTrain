@@ -1,19 +1,15 @@
+/** @typedef {import('../types.js').DoorDescriptor} DoorDescriptor */
+/** @typedef {import('../types.js').TrainDoorState} TrainDoorState */
+/** @typedef {import('../types.js').TrainGraphDescriptor} TrainGraphDescriptor */
+/** @typedef {import('../types.js').TrainState} TrainState */
+/** @typedef {import('../types.js').WagonLayerData} WagonLayerData */
+
 import { nanoid } from 'nanoid';
-import type {
-  DoorDescriptor,
-  TrainDoorState,
-  TrainGraphDescriptor,
-  TrainState,
-  WagonLayerData,
-  WagonState,
-} from '../types';
 
 export class TrainGraph {
-  private readonly wagonsById: Map<string, WagonLayerData> = new Map();
-
-  private state: TrainState;
-
-  constructor(private readonly descriptor: TrainGraphDescriptor) {
+  constructor(descriptor) {
+    this.descriptor = descriptor;
+    this.wagonsById = new Map();
     descriptor.wagons.forEach((wagon) => {
       this.wagonsById.set(wagon.id, wagon);
     });
@@ -29,11 +25,11 @@ export class TrainGraph {
     };
   }
 
-  getState(): TrainState {
+  getState() {
     return this.state;
   }
 
-  getCurrentWagon(): WagonLayerData {
+  getCurrentWagon() {
     const wagon = this.wagonsById.get(this.state.currentWagonId);
     if (!wagon) {
       throw new Error(`Unknown wagon ${this.state.currentWagonId}`);
@@ -41,7 +37,7 @@ export class TrainGraph {
     return wagon;
   }
 
-  getWagon(id: string): WagonLayerData {
+  getWagon(id) {
     const wagon = this.wagonsById.get(id);
     if (!wagon) {
       throw new Error(`Unknown wagon ${id}`);
@@ -49,11 +45,11 @@ export class TrainGraph {
     return wagon;
   }
 
-  getAllWagons(): WagonLayerData[] {
+  getAllWagons() {
     return Array.from(this.wagonsById.values());
   }
 
-  getDoorState(wagonId: string, doorId: string): TrainDoorState {
+  getDoorState(wagonId, doorId) {
     const wagonState = this.state.wagons.find((w) => w.id === wagonId);
     if (!wagonState) {
       throw new Error(`Missing wagon state ${wagonId}`);
@@ -65,7 +61,7 @@ export class TrainGraph {
     return doorState;
   }
 
-  setDoorState(wagonId: string, doorId: string, state: TrainDoorState['state']): void {
+  setDoorState(wagonId, doorId, state) {
     const wagonState = this.state.wagons.find((w) => w.id === wagonId);
     if (!wagonState) {
       throw new Error(`Missing wagon state ${wagonId}`);
@@ -77,7 +73,7 @@ export class TrainGraph {
     doorState.state = state;
   }
 
-  travelTo(wagonId: string): WagonLayerData {
+  travelTo(wagonId) {
     if (!this.wagonsById.has(wagonId)) {
       throw new Error(`Unknown wagon ${wagonId}`);
     }
@@ -85,7 +81,7 @@ export class TrainGraph {
     return this.getCurrentWagon();
   }
 
-  rearrange(order: string[]): void {
+  rearrange(order) {
     const unique = new Set(order);
     if (unique.size !== order.length) {
       throw new Error('Duplicate wagon ids in order');
@@ -105,11 +101,11 @@ export class TrainGraph {
           id: door.id,
           state: this.resolveDoorInitialState(door),
         })),
-      } satisfies WagonState;
+      };
     });
   }
 
-  registerDoorInstance(wagonId: string, door: DoorDescriptor): TrainDoorState {
+  registerDoorInstance(wagonId, door) {
     const wagonState = this.state.wagons.find((w) => w.id === wagonId);
     if (!wagonState) {
       throw new Error(`Missing wagon state for ${wagonId}`);
@@ -119,13 +115,13 @@ export class TrainGraph {
       doorState = {
         id: door.id || nanoid(),
         state: this.resolveDoorInitialState(door),
-      } satisfies TrainDoorState;
+      };
       wagonState.doorStates.push(doorState);
     }
     return doorState;
   }
 
-  private resolveDoorInitialState(door: DoorDescriptor): TrainDoorState['state'] {
+  resolveDoorInitialState(door) {
     if (door.blockedIfFlag) {
       return 'blocked';
     }

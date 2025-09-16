@@ -1,20 +1,22 @@
-import type { GameRuntimeState } from './GameState';
-import { isoDistance, isoLerp, isoToScreen } from '../render/IsoMath';
-import type { IsoPoint } from '../types';
-import { NavMesh } from './NavMesh';
+/** @typedef {import('./GameState.js').GameRuntimeState} GameRuntimeState */
+/** @typedef {import('../types.js').IsoPoint} IsoPoint */
+
+import { isoDistance, isoLerp, isoToScreen } from '../render/IsoMath.js';
+import { NavMesh } from './NavMesh.js';
 
 const STOP_DISTANCE_PX = 10;
 
 export class MovementSystem {
-  private navMesh: NavMesh | null = null;
+  constructor(state) {
+    this.state = state;
+    this.navMesh = null;
+  }
 
-  constructor(private readonly state: GameRuntimeState) {}
-
-  setNavMesh(points: IsoPoint[]): void {
+  setNavMesh(points) {
     this.navMesh = new NavMesh(points);
   }
 
-  movePlayerTo(target: IsoPoint): void {
+  movePlayerTo(target) {
     if (!this.navMesh) {
       return;
     }
@@ -41,7 +43,7 @@ export class MovementSystem {
     player.isMoving = true;
   }
 
-  update(deltaSeconds: number): void {
+  update(deltaSeconds) {
     const player = this.state.player;
     if (player.path.length === 0) {
       player.isMoving = false;
@@ -64,7 +66,7 @@ export class MovementSystem {
     player.facing = Math.atan2(next.y - player.position.y, next.x - player.position.x);
   }
 
-  stop(): void {
+  stop() {
     const player = this.state.player;
     player.path = [];
     player.isMoving = false;

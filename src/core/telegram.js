@@ -1,46 +1,45 @@
-type TelegramUser = {
-  id?: number;
-  username?: string;
-};
+/**
+ * @typedef {Object} TelegramUser
+ * @property {number} [id]
+ * @property {string} [username]
+ */
 
-type TelegramWebApp = {
-  initData: string;
-  initDataUnsafe?: {
-    user?: TelegramUser;
-  };
-  ready(): void;
-  expand(): void;
-  enableClosingConfirmation(): void;
-  themeParams?: {
-    secondary_bg_color?: string;
-    text_color?: string;
-  };
-  HapticFeedback?: {
-    impactOccurred(style: 'light' | 'medium' | 'heavy'): void;
-    notificationOccurred(style: 'success' | 'warning' | 'error'): void;
-  };
-};
+/**
+ * @typedef {Object} TelegramWebApp
+ * @property {string} initData
+ * @property {{ user?: TelegramUser }} [initDataUnsafe]
+ * @property {() => void} ready
+ * @property {() => void} expand
+ * @property {() => void} enableClosingConfirmation
+ * @property {{ secondary_bg_color?: string, text_color?: string }} [themeParams]
+ * @property {{
+ *   impactOccurred(style: 'light' | 'medium' | 'heavy'): void,
+ *   notificationOccurred(style: 'success' | 'warning' | 'error'): void
+ * }} [HapticFeedback]
+ */
 
-const resolveWebApp = (): TelegramWebApp | null => {
-  const globalTelegram = (window as typeof window & { Telegram?: { WebApp?: TelegramWebApp } }).Telegram;
+/**
+ * @typedef {Object} TelegramContext
+ * @property {string} userId
+ * @property {string} [username]
+ * @property {string} initDataRaw
+ */
+
+const resolveWebApp = () => {
+  const globalTelegram = window.Telegram;
   return globalTelegram?.WebApp ?? null;
 };
 
-export interface TelegramContext {
-  userId: string;
-  username?: string;
-  initDataRaw: string;
-}
-
 export class TelegramBridge {
-  private webApp: TelegramWebApp | null = null;
+  constructor() {
+    this.webApp = null;
+    this.ctx = null;
+  }
 
-  private ctx: TelegramContext | null = null;
-
-  init(): Promise<TelegramContext> {
+  init() {
     const tg = resolveWebApp();
     if (!tg) {
-      const fallback: TelegramContext = { userId: 'local-user', initDataRaw: '', username: undefined };
+      const fallback = { userId: 'local-user', initDataRaw: '', username: undefined };
       this.ctx = fallback;
       return Promise.resolve(fallback);
     }
@@ -62,14 +61,14 @@ export class TelegramBridge {
     return Promise.resolve(this.ctx);
   }
 
-  getContext(): TelegramContext {
+  getContext() {
     if (!this.ctx) {
       throw new Error('TelegramBridge not initialized');
     }
     return this.ctx;
   }
 
-  vibrate(style: 'light' | 'medium' | 'heavy'): void {
+  vibrate(style) {
     if (this.webApp?.HapticFeedback) {
       this.webApp.HapticFeedback.impactOccurred(style);
       return;
@@ -79,7 +78,7 @@ export class TelegramBridge {
     }
   }
 
-  notify(style: 'success' | 'warning' | 'error'): void {
+  notify(style) {
     if (this.webApp?.HapticFeedback) {
       this.webApp.HapticFeedback.notificationOccurred(style);
       return;

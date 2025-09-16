@@ -1,10 +1,6 @@
-export type AmbientTrack = 'train' | 'dark';
+/** @typedef {'train' | 'dark'} AmbientTrack */
 
-type WebAudioWindow = typeof window & {
-  webkitAudioContext?: typeof AudioContext;
-};
-
-const createNoiseBuffer = (context: AudioContext, lengthSeconds: number): AudioBuffer => {
+const createNoiseBuffer = (context, lengthSeconds) => {
   const sampleRate = context.sampleRate;
   const buffer = context.createBuffer(1, sampleRate * lengthSeconds, sampleRate);
   const data = buffer.getChannelData(0);
@@ -14,7 +10,7 @@ const createNoiseBuffer = (context: AudioContext, lengthSeconds: number): AudioB
   return buffer;
 };
 
-const createStepBuffer = (context: AudioContext): AudioBuffer => {
+const createStepBuffer = (context) => {
   const duration = 0.12;
   const buffer = context.createBuffer(1, context.sampleRate * duration, context.sampleRate);
   const channel = buffer.getChannelData(0);
@@ -26,22 +22,20 @@ const createStepBuffer = (context: AudioContext): AudioBuffer => {
 };
 
 export class AudioManager {
-  private context: AudioContext | null = null;
+  constructor() {
+    this.context = null;
+    this.ambientSource = null;
+    this.gain = null;
+    this.stepBuffer = null;
+    this.initialized = false;
+  }
 
-  private ambientSource: AudioBufferSourceNode | null = null;
-
-  private gain: GainNode | null = null;
-
-  private stepBuffer: AudioBuffer | null = null;
-
-  private initialized = false;
-
-  async init(): Promise<void> {
+  async init() {
     if (this.initialized) {
       return;
     }
-    const audioWindow = window as WebAudioWindow;
-    const AudioCtx = window.AudioContext ?? audioWindow.webkitAudioContext;
+    const audioWindow = window;
+    const AudioCtx = window.AudioContext || audioWindow.webkitAudioContext;
     if (!AudioCtx) {
       return;
     }
@@ -54,13 +48,13 @@ export class AudioManager {
     await this.context.resume();
   }
 
-  async ensure(): Promise<void> {
+  async ensure() {
     if (!this.initialized) {
       await this.init();
     }
   }
 
-  async playAmbient(track: AmbientTrack): Promise<void> {
+  async playAmbient(track) {
     await this.ensure();
     if (!this.context || !this.gain) {
       return;
@@ -78,7 +72,7 @@ export class AudioManager {
     this.ambientSource = source;
   }
 
-  async playStep(): Promise<void> {
+  async playStep() {
     await this.ensure();
     if (!this.context || !this.stepBuffer) {
       return;
@@ -92,7 +86,7 @@ export class AudioManager {
     source.start();
   }
 
-  setVolume(value: number): void {
+  setVolume(value) {
     if (!this.gain) {
       return;
     }

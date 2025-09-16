@@ -1,18 +1,9 @@
-import type { GameConfig } from '../types';
+/** @typedef {import('../types.js').GameConfig} GameConfig */
 
 export class CanvasDisplay {
-  private readonly canvas: HTMLCanvasElement;
-
-  private readonly ctx: CanvasRenderingContext2D;
-
-  private readonly buffer: HTMLCanvasElement;
-
-  private readonly bufferCtx: CanvasRenderingContext2D;
-
-  private scale = 1;
-
-  constructor(canvas: HTMLCanvasElement, private readonly config: GameConfig) {
+  constructor(canvas, config) {
     this.canvas = canvas;
+    this.config = config;
     const ctx = canvas.getContext('2d');
     if (!ctx) {
       throw new Error('Failed to get 2D context');
@@ -27,16 +18,17 @@ export class CanvasDisplay {
       throw new Error('Failed to create buffer context');
     }
     this.bufferCtx = bufferCtx;
+    this.scale = 1;
     this.configureSmoothing();
     this.resize();
   }
 
-  private configureSmoothing(): void {
+  configureSmoothing() {
     this.ctx.imageSmoothingEnabled = false;
     this.bufferCtx.imageSmoothingEnabled = false;
   }
 
-  resize(): void {
+  resize() {
     const { innerWidth, innerHeight } = window;
     const scaleX = Math.floor(innerWidth / this.config.virtualWidth) || 1;
     const scaleY = Math.floor(innerHeight / this.config.virtualHeight) || 1;
@@ -48,15 +40,15 @@ export class CanvasDisplay {
     this.configureSmoothing();
   }
 
-  get context(): CanvasRenderingContext2D {
+  get context() {
     return this.bufferCtx;
   }
 
-  clear(): void {
+  clear() {
     this.bufferCtx.clearRect(0, 0, this.buffer.width, this.buffer.height);
   }
 
-  present(): void {
+  present() {
     this.ctx.save();
     this.ctx.imageSmoothingEnabled = false;
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -65,7 +57,7 @@ export class CanvasDisplay {
     this.ctx.restore();
   }
 
-  getScale(): number {
+  getScale() {
     return this.scale;
   }
 }

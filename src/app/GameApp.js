@@ -1,95 +1,56 @@
-import { AudioManager } from '../core/audio';
-import { applySaveToState, createSaveFromState, loadSave, persistSave } from '../core/save';
-import { TelegramBridge } from '../core/telegram';
-import { ToastController } from '../core/toast';
-import { createRuntimeState } from '../game/GameState';
-import type { GameRuntimeState } from '../game/GameState';
-import { MovementSystem } from '../game/MovementSystem';
-import { TrainGraph } from '../game/TrainGraph';
-import type { InteractionTarget, IsoPoint, WagonLayerData } from '../types';
-import { InputRouter, type HapticsBridge } from '../input/InputRouter';
-import { IsometricRenderer } from '../render/IsometricRenderer';
-import { CanvasDisplay } from '../render/CanvasDisplay';
-import { trainDescriptor } from '../data/wagons';
-import { DialogueController } from '../ui/dialogue';
-import { HudController } from '../ui/hud';
-import { FadeController } from '../ui/fade';
-import { ErrorScreen } from '../ui/error';
-import { DebuggerOverlay } from '../ui/debugger';
-import { InteractionSystem } from '../systems/InteractionSystem';
+import { AudioManager } from '../core/audio.js';
+import { applySaveToState, createSaveFromState, loadSave, persistSave } from '../core/save.js';
+import { TelegramBridge } from '../core/telegram.js';
+import { ToastController } from '../core/toast.js';
+import { createRuntimeState } from '../game/GameState.js';
+import { MovementSystem } from '../game/MovementSystem.js';
+import { TrainGraph } from '../game/TrainGraph.js';
+import { InputRouter } from '../input/InputRouter.js';
+import { IsometricRenderer } from '../render/IsometricRenderer.js';
+import { CanvasDisplay } from '../render/CanvasDisplay.js';
+import { trainDescriptor } from '../data/wagons.js';
+import { DialogueController } from '../ui/dialogue.js';
+import { HudController } from '../ui/hud.js';
+import { FadeController } from '../ui/fade.js';
+import { ErrorScreen } from '../ui/error.js';
+import { DebuggerOverlay } from '../ui/debugger.js';
+import { InteractionSystem } from '../systems/InteractionSystem.js';
 
 const GAME_CONFIG = {
   virtualWidth: 360,
   virtualHeight: 200,
   tileWidth: 128,
   tileHeight: 64,
-} as const;
+};
 
 export class GameApp {
-  private readonly canvas: HTMLCanvasElement;
-
-  private readonly overlayRoot: HTMLElement;
-
-  private readonly display: CanvasDisplay;
-
-  private readonly telegram = new TelegramBridge();
-
-  private readonly audio = new AudioManager();
-
-  private readonly toast: ToastController;
-
-  private readonly dialogue: DialogueController;
-
-  private readonly hud: HudController;
-
-  private readonly fade: FadeController;
-
-  private readonly errorScreen: ErrorScreen;
-
-  private readonly debug: DebuggerOverlay;
-
-  private readonly train = new TrainGraph(trainDescriptor);
-
-  private readonly movement: MovementSystem;
-
-  private readonly renderer: IsometricRenderer;
-
-  private interaction!: InteractionSystem;
-
-  private inputRouter!: InputRouter;
-
-  private state: GameRuntimeState;
-
-  private lastTime = performance.now();
-
-  private userId = 'local-user';
-
-  private loopHandle = 0;
-
-  private fatalError = false;
-
-  private destroyed = false;
-
-  constructor(
-    canvas: HTMLCanvasElement,
-    overlayRoot: HTMLElement,
-    overlays?: { errorScreen?: ErrorScreen; debugOverlay?: DebuggerOverlay },
-  ) {
+  constructor(canvas, overlayRoot, overlays) {
     this.canvas = canvas;
     this.overlayRoot = overlayRoot;
     this.display = new CanvasDisplay(canvas, GAME_CONFIG);
+    this.telegram = new TelegramBridge();
+    this.audio = new AudioManager();
     this.toast = new ToastController(this.overlayRoot);
     this.dialogue = new DialogueController(this.overlayRoot);
     this.fade = new FadeController(this.overlayRoot);
     this.hud = new HudController(this.overlayRoot, this.audio, this.toast);
     this.errorScreen = overlays?.errorScreen ?? new ErrorScreen(this.overlayRoot);
     this.debug = overlays?.debugOverlay ?? new DebuggerOverlay(this.overlayRoot);
+    this.train = new TrainGraph(trainDescriptor);
 
     const wagon = this.train.getCurrentWagon();
     this.state = createRuntimeState(GAME_CONFIG, wagon, this.train.getState());
     this.movement = new MovementSystem(this.state);
     this.movement.setNavMesh(wagon.navmesh);
     this.renderer = new IsometricRenderer(this.display, this.state);
+    this.interaction = null;
+    this.inputRouter = null;
+    this.lastTime = performance.now();
+    this.userId = 'local-user';
+    this.loopHandle = 0;
+    this.fatalError = false;
+    this.destroyed = false;
+
     this.buildTargetsForWagon(wagon);
     window.addEventListener('resize', () => this.display.resize());
     this.debug.setStatus('Создание приложения');
@@ -99,7 +60,7 @@ export class GameApp {
     });
   }
 
-  async init(): Promise<void> {
+  async init() {
     this.debug.log('game.init.start');
     this.errorScreen.hide();
     try {
@@ -110,7 +71,7 @@ export class GameApp {
         hasInitData: Boolean(ctx.initDataRaw),
       });
       await this.guard('Проверка данных сессии', () => this.verifyInitData(ctx.initDataRaw));
-      await this.guard('Инициализация аудио', () => this.audio.init());
+      await this.guard('Инииализация аудио', () => this.audio.init());
       await this.guard('Запуск фонового звука', () => this.audio.playAmbient('train'));
       await this.guard('Подготовка систем взаимодействия', () => {
         this.interaction = new InteractionSystem({
@@ -121,14 +82,14 @@ export class GameApp {
           toast: this.toast,
           audio: this.audio,
           userId: this.userId,
-          onTravel: async (wagonId: string, spawnPoint: IsoPoint) => {
+          onTravel: async (wagonId, spawnPoint) => {
             await this.travelTo(wagonId, spawnPoint);
           },
           onStateChanged: () => this.saveGame(),
         });
-        const haptics: HapticsBridge = {
-          impact: (style: 'light' | 'medium' | 'heavy') => this.telegram.vibrate(style),
-          notify: (style: 'success' | 'warning' | 'error') => this.telegram.notify(style),
+        const haptics = {
+          impact: (style) => this.telegram.vibrate(style),
+          notify: (style) => this.telegram.notify(style),
         };
         this.inputRouter = new InputRouter(this.canvas, this.state, this.interaction, haptics);
         this.inputRouter.attach();
@@ -143,7 +104,7 @@ export class GameApp {
     }
   }
 
-  private tryRestoreSave(): void {
+  tryRestoreSave() {
     this.debug.log('save.restore.start');
     try {
       const save = loadSave(this.userId);
@@ -172,7 +133,7 @@ export class GameApp {
     }
   }
 
-  private refreshDoorsFromFlags(): void {
+  refreshDoorsFromFlags() {
     this.train.getAllWagons().forEach((wagon) => {
       wagon.doors.forEach((door) => {
         if (door.lockedByFlag && this.state.flags.story.has(door.lockedByFlag)) {
@@ -182,8 +143,8 @@ export class GameApp {
     });
   }
 
-  private buildTargetsForWagon(wagon: WagonLayerData): void {
-    const targets: InteractionTarget[] = [];
+  buildTargetsForWagon(wagon) {
+    const targets = [];
     const doors = wagon.doors ?? [];
     const npcs = wagon.npcs ?? [];
     const objects = wagon.objects ?? [];
@@ -218,7 +179,7 @@ export class GameApp {
     this.debug.log('targets.updated', { wagonId: wagon.id, targets: targets.length });
   }
 
-  private async travelTo(wagonId: string, spawnPoint: IsoPoint): Promise<void> {
+  async travelTo(wagonId, spawnPoint) {
     await this.fade.fadeOut();
     const wagon = this.train.travelTo(wagonId);
     this.state.wagon = wagon;
@@ -234,11 +195,11 @@ export class GameApp {
     this.debug.log('travel.complete', { wagonId, spawnPoint });
   }
 
-  private saveGame(): void {
+  saveGame() {
     persistSave(this.userId, createSaveFromState(this.state));
   }
 
-  private async verifyInitData(raw: string): Promise<void> {
+  async verifyInitData(raw) {
     if (!raw) {
       return;
     }
@@ -258,8 +219,8 @@ export class GameApp {
     }
   }
 
-  private startLoop(): void {
-    const tick = (time: number) => {
+  startLoop() {
+    const tick = (time) => {
       if (this.destroyed || this.fatalError) {
         return;
       }
@@ -277,7 +238,7 @@ export class GameApp {
     this.loopHandle = requestAnimationFrame(tick);
   }
 
-  destroy(): void {
+  destroy() {
     this.destroyed = true;
     if (this.loopHandle) {
       cancelAnimationFrame(this.loopHandle);
@@ -287,7 +248,7 @@ export class GameApp {
     }
   }
 
-  private async guard<T>(stage: string, task: () => Promise<T> | T): Promise<T> {
+  async guard(stage, task) {
     this.debug.setStatus(`${stage}...`);
     this.debug.log('stage.start', { stage });
     try {
@@ -301,7 +262,7 @@ export class GameApp {
     }
   }
 
-  private handleFatalError(error: unknown, stage: string): void {
+  handleFatalError(error, stage) {
     if (this.fatalError) {
       return;
     }
@@ -322,7 +283,7 @@ export class GameApp {
     });
   }
 
-  private describeError(error: unknown): { message: string; stack?: string } {
+  describeError(error) {
     if (error instanceof Error) {
       return { message: error.message, stack: error.stack ?? undefined };
     }

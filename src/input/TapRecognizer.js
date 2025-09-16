@@ -1,37 +1,34 @@
-type TapKind = 'tap' | 'double-tap' | 'long-press';
-
-type TapHandler = (event: PointerEvent, kind: TapKind) => void;
+/** @typedef {'tap' | 'double-tap' | 'long-press'} TapKind */
+/** @typedef {(event: PointerEvent, kind: TapKind) => void} TapHandler */
 
 const DOUBLE_TAP_DELAY = 300;
 const LONG_PRESS_DELAY = 450;
 const MOVE_THRESHOLD = 16;
 
 export class TapRecognizer {
-  private lastTapTime = 0;
+  constructor(handler) {
+    this.handler = handler;
+    this.lastTapTime = 0;
+    this.lastTapPoint = null;
+    this.longPressTimer = null;
+    this.isPointerDown = false;
+  }
 
-  private lastTapPoint: { x: number; y: number } | null = null;
-
-  private longPressTimer: ReturnType<typeof setTimeout> | null = null;
-
-  private isPointerDown = false;
-
-  constructor(private readonly handler: TapHandler) {}
-
-  attach(element: HTMLElement): void {
+  attach(element) {
     element.addEventListener('pointerdown', this.handlePointerDown, { passive: false });
     element.addEventListener('pointerup', this.handlePointerUp, { passive: false });
     element.addEventListener('pointercancel', this.handlePointerCancel, { passive: false });
     element.addEventListener('pointermove', this.handlePointerMove, { passive: false });
   }
 
-  detach(element: HTMLElement): void {
+  detach(element) {
     element.removeEventListener('pointerdown', this.handlePointerDown);
     element.removeEventListener('pointerup', this.handlePointerUp);
     element.removeEventListener('pointercancel', this.handlePointerCancel);
     element.removeEventListener('pointermove', this.handlePointerMove);
   }
 
-  private handlePointerDown = (event: PointerEvent): void => {
+  handlePointerDown = (event) => {
     if (event.pointerType === 'mouse' && event.button !== 0) {
       return;
     }
@@ -46,7 +43,7 @@ export class TapRecognizer {
     }, LONG_PRESS_DELAY);
   };
 
-  private handlePointerUp = (event: PointerEvent): void => {
+  handlePointerUp = (event) => {
     if (!this.isPointerDown) {
       return;
     }
@@ -72,11 +69,11 @@ export class TapRecognizer {
     this.handler(event, 'tap');
   };
 
-  private handlePointerCancel = (): void => {
+  handlePointerCancel = () => {
     this.reset();
   };
 
-  private handlePointerMove = (event: PointerEvent): void => {
+  handlePointerMove = (event) => {
     if (!this.isPointerDown || !this.lastTapPoint) {
       return;
     }
@@ -87,12 +84,12 @@ export class TapRecognizer {
     }
   };
 
-  private reset(): void {
+  reset() {
     this.isPointerDown = false;
     this.clearLongPress();
   }
 
-  private clearLongPress(): void {
+  clearLongPress() {
     if (this.longPressTimer) {
       clearTimeout(this.longPressTimer);
       this.longPressTimer = null;

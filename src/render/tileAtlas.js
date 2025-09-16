@@ -1,17 +1,9 @@
-import type { GameConfig, LayerTile } from '../types';
-import { isoToScreen } from './IsoMath';
+/** @typedef {import('../types.js').GameConfig} GameConfig */
+/** @typedef {import('../types.js').LayerTile} LayerTile */
 
-type FillStyle = string | CanvasGradient | CanvasPattern;
+import { isoToScreen } from './IsoMath.js';
 
-const drawDiamond = (
-  ctx: CanvasRenderingContext2D,
-  cx: number,
-  cy: number,
-  width: number,
-  height: number,
-  fill: FillStyle,
-  stroke?: string,
-): void => {
+const drawDiamond = (ctx, cx, cy, width, height, fill, stroke) => {
   ctx.beginPath();
   ctx.moveTo(cx, cy - height / 2);
   ctx.lineTo(cx + width / 2, cy);
@@ -27,15 +19,7 @@ const drawDiamond = (
   }
 };
 
-const drawWall = (
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  elevation: number,
-  tint: string,
-): void => {
+const drawWall = (ctx, x, y, width, height, elevation, tint) => {
   const top = y - elevation;
   ctx.fillStyle = tint;
   ctx.beginPath();
@@ -63,7 +47,7 @@ const drawWall = (
   ctx.fill();
 };
 
-const shadeColor = (hex: string, percent: number): string => {
+const shadeColor = (hex, percent) => {
   const normalized = hex.startsWith('#') ? hex.slice(1) : hex;
   const num = parseInt(normalized, 16);
   const r = (num >> 16) & 0xff;
@@ -75,14 +59,7 @@ const shadeColor = (hex: string, percent: number): string => {
   return `#${((1 << 24) + (newR << 16) + (newG << 8) + newB).toString(16).slice(1)}`;
 };
 
-const createNoiseGradient = (
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  color: string,
-): CanvasGradient => {
+const createNoiseGradient = (ctx, x, y, width, height, color) => {
   const gradient = ctx.createLinearGradient(x, y - height / 2, x, y + height / 2);
   gradient.addColorStop(0, shadeColor(color, 0.3));
   gradient.addColorStop(0.5, color);
@@ -90,25 +67,14 @@ const createNoiseGradient = (
   return gradient;
 };
 
-const drawDecal = (
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  tint: string,
-): void => {
+const drawDecal = (ctx, x, y, width, height, tint) => {
   ctx.save();
   ctx.globalAlpha = 0.55;
   drawDiamond(ctx, x, y, width * 0.9, height * 0.9, tint);
   ctx.restore();
 };
 
-export const drawTile = (
-  ctx: CanvasRenderingContext2D,
-  tile: LayerTile,
-  config: GameConfig,
-): void => {
+export const drawTile = (ctx, tile, config) => {
   const { x, y } = isoToScreen(tile.position, config.tileWidth, config.tileHeight);
   const width = config.tileWidth;
   const height = config.tileHeight;

@@ -1,13 +1,5 @@
-import type { TrainGraphDescriptor } from '../types';
-
-const buildRectTiles = (
-  startX: number,
-  startY: number,
-  width: number,
-  height: number,
-  tint: string,
-) => {
-  const tiles = [] as { tileId: string; position: { x: number; y: number }; tint: string }[];
+const buildRectTiles = (startX, startY, width, height, tint) => {
+  const tiles = [];
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
       tiles.push({
@@ -37,7 +29,7 @@ const wagonCFloor = [
   { tileId: 'floor-metal', position: { x: 4, y: 1 }, tint: '#2c3f63', decalId: 'rust' },
 ];
 
-export const trainDescriptor: TrainGraphDescriptor = {
+export const trainDescriptor = {
   startWagonId: 'car-a',
   wagons: [
     {

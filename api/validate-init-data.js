@@ -1,14 +1,12 @@
 import { Buffer } from 'buffer';
 import crypto from 'crypto';
-import type { IncomingMessage, ServerResponse } from 'http';
-import type { Readable } from 'stream';
 import process from 'process';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? '';
 
-const buildDataCheckString = (initData: string): string => {
+const buildDataCheckString = (initData) => {
   const params = new URLSearchParams(initData);
-  const entries: string[] = [];
+  const entries = [];
   params.sort();
   params.forEach((value, key) => {
     if (key === 'hash') {
@@ -19,7 +17,7 @@ const buildDataCheckString = (initData: string): string => {
   return entries.join('\n');
 };
 
-const verify = (initData: string): boolean => {
+const verify = (initData) => {
   if (!BOT_TOKEN) {
     return false;
   }
@@ -34,20 +32,17 @@ const verify = (initData: string): boolean => {
   return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(computed, 'hex'));
 };
 
-const parseBody = async (
-  req: IncomingMessage & { body?: unknown },
-): Promise<{ initData?: string }> => {
+const parseBody = async (req) => {
   if (req.body) {
     if (typeof req.body === 'string') {
-      return JSON.parse(req.body) as { initData?: string };
+      return JSON.parse(req.body);
     }
     if (typeof req.body === 'object') {
-      return req.body as { initData?: string };
+      return req.body;
     }
   }
-  const chunks: Buffer[] = [];
-  const stream = req as Readable;
-  for await (const chunk of stream) {
+  const chunks = [];
+  for await (const chunk of req) {
     if (typeof chunk === 'string') {
       chunks.push(Buffer.from(chunk));
     } else if (Buffer.isBuffer(chunk)) {
@@ -60,16 +55,13 @@ const parseBody = async (
     return {};
   }
   try {
-    return JSON.parse(Buffer.concat(chunks).toString('utf8')) as { initData?: string };
+    return JSON.parse(Buffer.concat(chunks).toString('utf8'));
   } catch (error) {
     return {};
   }
 };
 
-export default async function handler(
-  req: IncomingMessage & { body?: unknown },
-  res: ServerResponse,
-): Promise<void> {
+export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -84,7 +76,7 @@ export default async function handler(
     return;
   }
   const body = await parseBody(req);
-  const { initData } = body;
+  const { initData } = body ?? {};
   if (!initData) {
     res.statusCode = 400;
     res.end('Missing initData');

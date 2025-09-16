@@ -1,16 +1,16 @@
-import { GameApp } from './app/GameApp';
-import { ErrorScreen } from './ui/error';
-import { DebuggerOverlay } from './ui/debugger';
+import { GameApp } from './app/GameApp.js';
+import { ErrorScreen } from './ui/error.js';
+import { DebuggerOverlay } from './ui/debugger.js';
 
 const bootstrap = async () => {
-  const canvas = document.querySelector<HTMLCanvasElement>('#game');
-  const overlay = document.querySelector<HTMLElement>('#overlay-root');
-  if (!canvas || !overlay) {
+  const canvas = document.querySelector('#game');
+  const overlay = document.querySelector('#overlay-root');
+  if (!canvas || !(canvas instanceof HTMLCanvasElement) || !overlay || !(overlay instanceof HTMLElement)) {
     throw new Error('Missing canvas or overlay root');
   }
   const debugOverlay = new DebuggerOverlay(overlay);
   const errorScreen = new ErrorScreen(overlay);
-  let app: GameApp | null = null;
+  let app = null;
   try {
     app = new GameApp(canvas, overlay, { errorScreen, debugOverlay });
   } catch (error) {

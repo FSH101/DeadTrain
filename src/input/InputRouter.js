@@ -1,25 +1,22 @@
-import type { GameRuntimeState } from '../game/GameState';
-import { HitTester } from '../game/HitTester';
-import type { InteractionSystem } from '../systems/InteractionSystem';
-import type { Intent } from '../types';
-import { TapRecognizer } from './TapRecognizer';
+/** @typedef {import('../game/GameState.js').GameRuntimeState} GameRuntimeState */
+/** @typedef {import('../systems/InteractionSystem.js').InteractionSystem} InteractionSystem */
+/** @typedef {import('../types.js').Intent} Intent */
 
-export interface HapticsBridge {
-  impact(style: 'light' | 'medium' | 'heavy'): void;
-  notify(style: 'success' | 'warning' | 'error'): void;
-}
+import { HitTester } from '../game/HitTester.js';
+import { TapRecognizer } from './TapRecognizer.js';
+
+/**
+ * @typedef {Object} HapticsBridge
+ * @property {(style: 'light' | 'medium' | 'heavy') => void} impact
+ * @property {(style: 'success' | 'warning' | 'error') => void} notify
+ */
 
 export class InputRouter {
-  private readonly recognizer: TapRecognizer;
-
-  private readonly hitTester: HitTester;
-
-  constructor(
-    private readonly canvas: HTMLCanvasElement,
-    private readonly state: GameRuntimeState,
-    private readonly interaction: InteractionSystem,
-    private readonly haptics: HapticsBridge,
-  ) {
+  constructor(canvas, state, interaction, haptics) {
+    this.canvas = canvas;
+    this.state = state;
+    this.interaction = interaction;
+    this.haptics = haptics;
     this.hitTester = new HitTester(state);
     this.recognizer = new TapRecognizer((event, kind) => {
       event.preventDefault();
@@ -35,15 +32,15 @@ export class InputRouter {
     });
   }
 
-  attach(): void {
+  attach() {
     this.recognizer.attach(this.canvas);
   }
 
-  detach(): void {
+  detach() {
     this.recognizer.detach(this.canvas);
   }
 
-  private toVirtualPoint(event: PointerEvent): { x: number; y: number } {
+  toVirtualPoint(event) {
     const rect = this.canvas.getBoundingClientRect();
     const xRatio = (event.clientX - rect.left) / rect.width;
     const yRatio = (event.clientY - rect.top) / rect.height;
@@ -53,7 +50,7 @@ export class InputRouter {
     };
   }
 
-  private handleTap(event: PointerEvent): void {
+  handleTap(event) {
     if (this.state.isInputBlocked) {
       return;
     }
@@ -63,44 +60,44 @@ export class InputRouter {
       return;
     }
     if (result.target) {
-      const intent: Intent = { type: 'Interact', target: result.target };
+      const intent = { type: 'Interact', target: result.target };
       void this.interaction.handleIntent(intent);
       this.haptics.impact('light');
       return;
     }
     if (result.destination) {
-      const intent: Intent = { type: 'MoveTo', target: null, destination: result.destination };
+      const intent = { type: 'MoveTo', target: null, destination: result.destination };
       void this.interaction.handleIntent(intent);
       this.haptics.impact('light');
     }
   }
 
-  private handleDoubleTap(event: PointerEvent): void {
+  handleDoubleTap(event) {
     if (this.state.isInputBlocked) {
       return;
     }
     const point = this.toVirtualPoint(event);
     const result = this.hitTester.hitTest(point, event);
     if (result.target) {
-      const intent: Intent = { type: 'Interact', target: result.target };
+      const intent = { type: 'Interact', target: result.target };
       void this.interaction.handleIntent(intent);
       this.haptics.notify('success');
       return;
     }
     if (result.destination) {
-      const intent: Intent = { type: 'MoveTo', target: null, destination: result.destination };
+      const intent = { type: 'MoveTo', target: null, destination: result.destination };
       void this.interaction.handleIntent(intent);
       this.haptics.impact('medium');
     }
   }
 
-  private handleInspect(event: PointerEvent): void {
+  handleInspect(event) {
     if (this.state.isInputBlocked) {
       return;
     }
     const point = this.toVirtualPoint(event);
     const result = this.hitTester.hitTest(point, event);
-    const intent: Intent = {
+    const intent = {
       type: 'Inspect',
       target: result.target,
       destination: result.destination ?? undefined,

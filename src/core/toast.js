@@ -1,17 +1,14 @@
 import { nanoid } from 'nanoid';
 
 export class ToastController {
-  private readonly container: HTMLElement;
-
-  private active: Map<string, HTMLDivElement> = new Map();
-
-  constructor(root: HTMLElement) {
+  constructor(root) {
     this.container = document.createElement('div');
     this.container.className = 'toast-container';
     root.appendChild(this.container);
+    this.active = new Map();
   }
 
-  show(text: string, duration = 2200): void {
+  show(text, duration = 2200) {
     const id = nanoid();
     const element = document.createElement('div');
     element.className = 'toast';
@@ -21,7 +18,7 @@ export class ToastController {
     setTimeout(() => this.dismiss(id), duration);
   }
 
-  dismiss(id: string): void {
+  dismiss(id) {
     const element = this.active.get(id);
     if (!element) {
       return;

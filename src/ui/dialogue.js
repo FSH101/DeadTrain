@@ -1,23 +1,16 @@
-import type { DialogueChoice, DialogueNode, DialogueScript } from '../types';
+/** @typedef {import('../types.js').DialogueChoice} DialogueChoice */
+/** @typedef {import('../types.js').DialogueNode} DialogueNode */
+/** @typedef {import('../types.js').DialogueScript} DialogueScript */
 
-interface DialogueHandlers {
-  onAdvance(node: DialogueNode, choice?: DialogueChoice): string | null;
-  canSelect?(choice: DialogueChoice): { allowed: boolean; reason?: string };
-  onClose(): void;
-}
+/**
+ * @typedef {Object} DialogueHandlers
+ * @property {(node: DialogueNode, choice?: DialogueChoice) => string | null} onAdvance
+ * @property {(choice: DialogueChoice) => { allowed: boolean, reason?: string }} [canSelect]
+ * @property {() => void} onClose
+ */
 
 export class DialogueController {
-  private readonly container: HTMLDivElement;
-
-  private readonly panel: HTMLDivElement;
-
-  private currentScript: DialogueScript | null = null;
-
-  private handlers: DialogueHandlers | null = null;
-
-  private currentNodeId: string | null = null;
-
-  constructor(root: HTMLElement) {
+  constructor(root) {
     this.container = document.createElement('div');
     this.container.dataset.role = 'ui-block';
     this.container.className = 'overlay';
@@ -28,9 +21,13 @@ export class DialogueController {
     this.panel.dataset.role = 'ui-block';
     this.container.appendChild(this.panel);
     root.appendChild(this.container);
+
+    this.currentScript = null;
+    this.handlers = null;
+    this.currentNodeId = null;
   }
 
-  open(script: DialogueScript, startId: string, handlers: DialogueHandlers): void {
+  open(script, startId, handlers) {
     this.currentScript = script;
     this.handlers = handlers;
     this.currentNodeId = startId;
@@ -38,7 +35,7 @@ export class DialogueController {
     this.renderCurrentNode();
   }
 
-  close(): void {
+  close() {
     this.currentScript = null;
     this.handlers = null;
     this.currentNodeId = null;
@@ -46,11 +43,11 @@ export class DialogueController {
     this.container.style.pointerEvents = 'none';
   }
 
-  private renderCurrentNode(): void {
+  renderCurrentNode() {
     if (!this.currentScript || !this.currentNodeId || !this.handlers) {
       return;
     }
-    const node = this.currentScript.nodes.find((entry: DialogueNode) => entry.id === this.currentNodeId);
+    const node = this.currentScript.nodes.find((entry) => entry.id === this.currentNodeId);
     if (!node) {
       console.error('Dialogue node not found', this.currentNodeId);
       this.close();
@@ -67,7 +64,7 @@ export class DialogueController {
     speaker.textContent = node.type === 'line' ? node.speaker : `${node.speaker}`;
     const text = document.createElement('div');
     text.className = 'dialogue-text';
-    text.textContent = node.type === 'line' ? node.text : node.text;
+    text.textContent = node.text;
     this.panel.appendChild(speaker);
     this.panel.appendChild(text);
 
@@ -89,7 +86,7 @@ export class DialogueController {
     } else if (node.type === 'choice') {
       const options = document.createElement('div');
       options.className = 'dialogue-options';
-      node.options.forEach((option: DialogueChoice) => {
+      node.options.forEach((option) => {
         const button = document.createElement('button');
         button.className = 'dialogue-button';
         button.textContent = option.label;
@@ -118,7 +115,7 @@ export class DialogueController {
     }
   }
 
-  private renderEnding(node: DialogueNode & { type: 'ending' }): void {
+  renderEnding(node) {
     const title = document.createElement('div');
     title.className = 'dialogue-speaker';
     title.textContent = node.title;

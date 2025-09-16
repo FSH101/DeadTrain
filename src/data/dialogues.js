@@ -1,6 +1,4 @@
-import type { DialogueScript } from '../types';
-
-export const dialogues: DialogueScript[] = [
+export const dialogues = [
   {
     id: 'conductor',
     nodes: [
@@ -125,7 +123,7 @@ export const dialogues: DialogueScript[] = [
         id: 'options',
         type: 'choice',
         speaker: 'Машинист',
-        text: 'Решай быстро. Мы можем освободить состав, вернуть его в цикл или отпустить всех призраков.',
+        text: 'Решай быстро. Мы можем освободить состав, вернуть его в цикл или отпустить всех призаков.',
         options: [
           {
             id: 'free',
@@ -177,4 +175,4 @@ export const dialogues: DialogueScript[] = [
   },
 ];
 
-export const getDialogue = (id: string): DialogueScript | undefined => dialogues.find((dialogue) => dialogue.id === id);
+export const getDialogue = (id) => dialogues.find((dialogue) => dialogue.id === id);

@@ -1,45 +1,28 @@
-import { createSaveFromState, persistSave } from '../core/save';
-import type { AudioManager } from '../core/audio';
-import type { ToastController } from '../core/toast';
-import type { GameRuntimeState } from '../game/GameState';
-import type { MovementSystem } from '../game/MovementSystem';
-import type { TrainGraph } from '../game/TrainGraph';
-import { getDialogue } from '../data/dialogues';
-import type { DialogueChoice, DialogueNode, DoorDescriptor, Intent, InteractionTarget, IsoPoint } from '../types';
-import type { DialogueController } from '../ui/dialogue';
+/** @typedef {import('../types.js').DialogueChoice} DialogueChoice */
+/** @typedef {import('../types.js').DialogueNode} DialogueNode */
+/** @typedef {import('../types.js').DoorDescriptor} DoorDescriptor */
+/** @typedef {import('../types.js').Intent} Intent */
+/** @typedef {import('../types.js').InteractionTarget} InteractionTarget */
+/** @typedef {import('../types.js').IsoPoint} IsoPoint */
 
-interface InteractionSystemDeps {
-  state: GameRuntimeState;
-  movement: MovementSystem;
-  train: TrainGraph;
-  dialogue: DialogueController;
-  toast: ToastController;
-  audio: AudioManager;
-  userId: string;
-  onTravel: (wagonId: string, spawnPoint: IsoPoint) => Promise<void>;
-  onStateChanged: () => void;
-}
+import { createSaveFromState, persistSave } from '../core/save.js';
+import { getDialogue } from '../data/dialogues.js';
+
+/**
+ * @typedef {Object} InteractionSystemDeps
+ * @property {import('../game/GameState.js').GameRuntimeState} state
+ * @property {import('../game/MovementSystem.js').MovementSystem} movement
+ * @property {import('../game/TrainGraph.js').TrainGraph} train
+ * @property {import('../ui/dialogue.js').DialogueController} dialogue
+ * @property {import('../core/toast.js').ToastController} toast
+ * @property {import('../core/audio.js').AudioManager} audio
+ * @property {string} userId
+ * @property {(wagonId: string, spawnPoint: IsoPoint) => Promise<void>} onTravel
+ * @property {() => void} onStateChanged
+ */
 
 export class InteractionSystem {
-  private readonly state: GameRuntimeState;
-
-  private readonly movement: MovementSystem;
-
-  private readonly train: TrainGraph;
-
-  private readonly dialogue: DialogueController;
-
-  private readonly toast: ToastController;
-
-  private readonly audio: AudioManager;
-
-  private readonly userId: string;
-
-  private readonly onTravel: (wagonId: string, spawnPoint: IsoPoint) => Promise<void>;
-
-  private readonly onStateChanged: () => void;
-
-  constructor({ state, movement, train, dialogue, toast, audio, userId, onTravel, onStateChanged }: InteractionSystemDeps) {
+  constructor({ state, movement, train, dialogue, toast, audio, userId, onTravel, onStateChanged }) {
     this.state = state;
     this.movement = movement;
     this.train = train;
@@ -51,7 +34,7 @@ export class InteractionSystem {
     this.onStateChanged = onStateChanged;
   }
 
-  async handleIntent(intent: Intent): Promise<void> {
+  async handleIntent(intent) {
     switch (intent.type) {
       case 'MoveTo':
         if (intent.destination) {
@@ -71,14 +54,14 @@ export class InteractionSystem {
     }
   }
 
-  private handleMove(destination: IsoPoint): void {
+  handleMove(destination) {
     this.state.marker.visible = true;
     this.state.marker.position = destination;
     this.movement.movePlayerTo(destination);
     void this.audio.playStep();
   }
 
-  private async handleInteraction(target: InteractionTarget): Promise<void> {
+  async handleInteraction(target) {
     if (target.kind === 'door') {
       await this.handleDoorInteraction(target);
       return;
@@ -92,8 +75,8 @@ export class InteractionSystem {
     }
   }
 
-  private async handleDoorInteraction(target: InteractionTarget): Promise<void> {
-    const door = target.metadata?.door as { wagonId: string; descriptor: DoorDescriptor } | undefined;
+  async handleDoorInteraction(target) {
+    const door = target.metadata?.door;
     if (!door) {
       return;
     }
@@ -116,8 +99,8 @@ export class InteractionSystem {
     this.onStateChanged();
   }
 
-  private handleNpcInteraction(target: InteractionTarget): void {
-    const dialogueId = target.metadata?.dialogueId as string | undefined;
+  handleNpcInteraction(target) {
+    const dialogueId = target.metadata?.dialogueId;
     if (!dialogueId) {
       return;
     }
@@ -142,7 +125,7 @@ export class InteractionSystem {
     });
   }
 
-  private advanceDialogue(node: DialogueNode, choice?: DialogueChoice): string | null {
+  advanceDialogue(node, choice) {
     if (node.type === 'ending') {
       this.state.flags.endings.add(node.endingId);
       this.toast.show(`Открыт финал: ${node.title}`);
@@ -163,7 +146,7 @@ export class InteractionSystem {
     return node.next ?? null;
   }
 
-  private canSelectChoice(choice: DialogueChoice): { allowed: boolean; reason?: string } {
+  canSelectChoice(choice) {
     if (choice.requiresFlag && !this.state.flags.story.has(choice.requiresFlag)) {
       return { allowed: false, reason: 'нужно доказательство' };
     }
@@ -173,7 +156,7 @@ export class InteractionSystem {
     return { allowed: true };
   }
 
-  private applyChoice(choice: DialogueChoice): void {
+  applyChoice(choice) {
     if (choice.setFlag) {
       this.setFlag(choice.setFlag);
     }
@@ -185,8 +168,8 @@ export class InteractionSystem {
     }
   }
 
-  private handleObjectInteraction(target: InteractionTarget): void {
-    const action = target.metadata?.onUse as string | undefined;
+  handleObjectInteraction(target) {
+    const action = target.metadata?.onUse;
     switch (action) {
       case 'luggage-check':
         if (!this.state.flags.story.has('hasCrowbar')) {
@@ -241,11 +224,11 @@ export class InteractionSystem {
     persistSave(this.userId, createSaveFromState(this.state));
   }
 
-  private handleInspect(target: InteractionTarget | null, destination?: IsoPoint): void {
+  handleInspect(target, destination) {
     if (target) {
       if (target.kind === 'door') {
-        const doorMeta = target.metadata as { door?: { descriptor?: { label?: string } } } | undefined;
-        this.toast.show(doorMeta?.door?.descriptor?.label ?? 'Дверь в другой отсек.');
+        const doorMeta = target.metadata?.door;
+        this.toast.show(doorMeta?.descriptor?.label ?? 'Дверь в другой отсек.');
         return;
       }
       if (target.kind === 'npc') {
@@ -253,7 +236,7 @@ export class InteractionSystem {
         return;
       }
       if (target.kind === 'object') {
-        const objectMeta = target.metadata as { label?: string } | undefined;
+        const objectMeta = target.metadata;
         this.toast.show(objectMeta?.label ?? 'Старая деталь.');
         return;
       }
@@ -267,7 +250,7 @@ export class InteractionSystem {
     }
   }
 
-  private setFlag(flag: string): void {
+  setFlag(flag) {
     if (this.state.flags.story.has(flag)) {
       return;
     }
@@ -276,7 +259,7 @@ export class InteractionSystem {
     this.onStateChanged();
   }
 
-  private unlockDoorsForFlag(flag: string): void {
+  unlockDoorsForFlag(flag) {
     this.train.getAllWagons().forEach((wagon) => {
       wagon.doors.forEach((door) => {
         if (door.lockedByFlag === flag) {
@@ -287,17 +270,17 @@ export class InteractionSystem {
     });
   }
 
-  private hasItem(item: string): boolean {
+  hasItem(item) {
     return (this.state.inventory[item] ?? 0) > 0;
   }
 
-  private giveItem(item: string): void {
+  giveItem(item) {
     const count = this.state.inventory[item] ?? 0;
     this.state.inventory[item] = count + 1;
     this.onStateChanged();
   }
 
-  private removeItem(item: string): boolean {
+  removeItem(item) {
     const count = this.state.inventory[item] ?? 0;
     if (count <= 0) {
       return false;

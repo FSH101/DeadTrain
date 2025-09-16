@@ -1,8 +1,10 @@
-import { isoToScreen } from '../render/IsoMath';
-import type { GameRuntimeState } from './GameState';
-import type { InteractionTarget, IsoPoint } from '../types';
+/** @typedef {import('./GameState.js').GameRuntimeState} GameRuntimeState */
+/** @typedef {import('../types.js').InteractionTarget} InteractionTarget */
+/** @typedef {import('../types.js').IsoPoint} IsoPoint */
 
-const PRIORITY: Record<string, number> = {
+import { isoToScreen } from '../render/IsoMath.js';
+
+const PRIORITY = {
   door: 3,
   npc: 2,
   object: 1,
@@ -10,16 +12,12 @@ const PRIORITY: Record<string, number> = {
 
 const FORGIVENESS_PX = 28;
 
-export type HitResult = {
-  target: InteractionTarget | null;
-  kind: 'ui' | 'world';
-  destination: IsoPoint | null;
-};
-
 export class HitTester {
-  constructor(private readonly state: GameRuntimeState) {}
+  constructor(state) {
+    this.state = state;
+  }
 
-  hitTest(point: { x: number; y: number }, event: PointerEvent): HitResult {
+  hitTest(point, event) {
     if (this.state.isInputBlocked) {
       return { target: null, kind: 'ui', destination: null };
     }
@@ -29,7 +27,7 @@ export class HitTester {
       return { target: null, kind: 'ui', destination: null };
     }
 
-    let selected: InteractionTarget | null = null;
+    let selected = null;
     let bestPriority = -1;
     let bestDistance = Number.POSITIVE_INFINITY;
 
@@ -56,7 +54,7 @@ export class HitTester {
     return { target: null, kind: 'world', destination: this.screenPointToIso(point) };
   }
 
-  private screenPointToIso(point: { x: number; y: number }): IsoPoint {
+  screenPointToIso(point) {
     const isoX = point.x / (this.state.config.tileWidth / 2);
     const isoY = point.y / (this.state.config.tileHeight / 2);
     const x = (isoY + isoX) / 2;

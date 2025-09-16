@@ -1,8 +1,10 @@
-import type { GameRuntimeState } from '../game/GameState';
-import { isoToScreen } from './IsoMath';
-import { drawTile } from './tileAtlas';
-import type { CanvasDisplay } from './CanvasDisplay';
-import type { DoorDescriptor, LightZone, NpcDescriptor } from '../types';
+/** @typedef {import('../game/GameState.js').GameRuntimeState} GameRuntimeState */
+/** @typedef {import('../types.js').DoorDescriptor} DoorDescriptor */
+/** @typedef {import('../types.js').LightZone} LightZone */
+/** @typedef {import('../types.js').NpcDescriptor} NpcDescriptor */
+
+import { isoToScreen } from './IsoMath.js';
+import { drawTile } from './tileAtlas.js';
 
 const PLAYER_COLOR = '#f2f5ff';
 const PLAYER_OUTLINE = '#1b2033';
@@ -10,12 +12,7 @@ const NPC_COLOR = '#e6b35c';
 const DOOR_COLOR = '#6e8cff';
 const OBJECT_COLOR = '#6bd6cb';
 
-const drawLights = (
-  ctx: CanvasRenderingContext2D,
-  lights: LightZone[] | undefined,
-  config: { tileWidth: number; tileHeight: number },
-  elapsed: number,
-): void => {
+const drawLights = (ctx, lights, config, elapsed) => {
   if (!lights || lights.length === 0) {
     return;
   }
@@ -37,11 +34,7 @@ const drawLights = (
   ctx.restore();
 };
 
-const drawDoor = (
-  ctx: CanvasRenderingContext2D,
-  door: DoorDescriptor,
-  config: { tileWidth: number; tileHeight: number },
-): void => {
+const drawDoor = (ctx, door, config) => {
   const screen = isoToScreen(door.position, config.tileWidth, config.tileHeight);
   ctx.save();
   ctx.fillStyle = DOOR_COLOR;
@@ -52,12 +45,7 @@ const drawDoor = (
   ctx.restore();
 };
 
-const drawNpc = (
-  ctx: CanvasRenderingContext2D,
-  npc: NpcDescriptor,
-  config: { tileWidth: number; tileHeight: number },
-  elapsed: number,
-): void => {
+const drawNpc = (ctx, npc, config, elapsed) => {
   const screen = isoToScreen(npc.position, config.tileWidth, config.tileHeight);
   ctx.save();
   const bounce = npc.idleAnimation === 'loop' ? Math.sin(elapsed * 2) * 2 : 0;
@@ -71,11 +59,7 @@ const drawNpc = (
   ctx.restore();
 };
 
-const drawPlayer = (
-  ctx: CanvasRenderingContext2D,
-  state: GameRuntimeState,
-  elapsed: number,
-): void => {
+const drawPlayer = (ctx, state, elapsed) => {
   const screen = isoToScreen(state.player.position, state.config.tileWidth, state.config.tileHeight);
   const wobble = state.player.isMoving ? Math.sin(elapsed * 8) * 2 : 0;
   ctx.save();
@@ -89,7 +73,7 @@ const drawPlayer = (
   ctx.restore();
 };
 
-const drawMarker = (ctx: CanvasRenderingContext2D, state: GameRuntimeState, elapsed: number): void => {
+const drawMarker = (ctx, state, elapsed) => {
   if (!state.marker.visible || !state.marker.position) {
     return;
   }
@@ -104,7 +88,7 @@ const drawMarker = (ctx: CanvasRenderingContext2D, state: GameRuntimeState, elap
   ctx.restore();
 };
 
-const drawHints = (ctx: CanvasRenderingContext2D, state: GameRuntimeState): void => {
+const drawHints = (ctx, state) => {
   const hints = state.wagon.hints ?? [];
   hints.forEach((hint) => {
     const screen = isoToScreen(hint.position, state.config.tileWidth, state.config.tileHeight);
@@ -121,11 +105,13 @@ const drawHints = (ctx: CanvasRenderingContext2D, state: GameRuntimeState): void
 };
 
 export class IsometricRenderer {
-  private elapsed = 0;
+  constructor(display, state) {
+    this.display = display;
+    this.state = state;
+    this.elapsed = 0;
+  }
 
-  constructor(private readonly display: CanvasDisplay, private readonly state: GameRuntimeState) {}
-
-  render(deltaSeconds: number): void {
+  render(deltaSeconds) {
     this.elapsed += deltaSeconds;
     const ctx = this.display.context;
     this.display.clear();

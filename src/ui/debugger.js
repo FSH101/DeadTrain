@@ -1,39 +1,25 @@
-export type DebugLevel = 'info' | 'warn' | 'error';
+/** @typedef {'info' | 'warn' | 'error'} DebugLevel */
 
-interface DebugEntry {
-  id: string;
-  timestamp: number;
-  level: DebugLevel;
-  message: string;
-  details?: string;
-}
+/**
+ * @typedef {Object} DebugEntry
+ * @property {string} id
+ * @property {number} timestamp
+ * @property {DebugLevel} level
+ * @property {string} message
+ * @property {string} [details]
+ */
 
-export interface DebuggerApi {
-  log: (message: string, payload?: unknown, level?: DebugLevel) => void;
-  show: () => void;
-  hide: () => void;
-  entries: () => DebugEntry[];
-  setStatus: (status: string, level?: DebugLevel) => void;
-}
+/**
+ * @typedef {Object} DebuggerApi
+ * @property {(message: string, payload?: unknown, level?: DebugLevel) => void} log
+ * @property {() => void} show
+ * @property {() => void} hide
+ * @property {() => DebugEntry[]} entries
+ * @property {(status: string, level?: DebugLevel) => void} setStatus
+ */
 
 export class DebuggerOverlay {
-  private readonly container: HTMLDivElement;
-
-  private readonly toggleButton: HTMLButtonElement;
-
-  private readonly panel: HTMLDivElement;
-
-  private readonly statusElement: HTMLSpanElement;
-
-  private readonly list: HTMLUListElement;
-
-  private readonly maxEntries = 80;
-
-  private entries: DebugEntry[] = [];
-
-  private visible = false;
-
-  constructor(root: HTMLElement) {
+  constructor(root) {
     this.container = document.createElement('div');
     this.container.className = 'debug-overlay';
     this.container.dataset.role = 'ui-block';
@@ -95,11 +81,15 @@ export class DebuggerOverlay {
     this.container.append(this.toggleButton, this.panel);
     root.appendChild(this.container);
 
+    this.maxEntries = 80;
+    this.entries = [];
+    this.visible = false;
+
     this.exposeToWindow();
   }
 
-  log(message: string, payload?: unknown, level: DebugLevel = 'info'): void {
-    const entry: DebugEntry = {
+  log(message, payload, level = 'info') {
+    const entry = {
       id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
       timestamp: Date.now(),
       level,
@@ -114,26 +104,26 @@ export class DebuggerOverlay {
     this.trimList();
   }
 
-  setStatus(status: string, level: DebugLevel = 'info'): void {
+  setStatus(status, level = 'info') {
     this.statusElement.textContent = status;
     this.statusElement.dataset.level = level;
   }
 
-  show(): void {
+  show() {
     this.visible = true;
     this.panel.hidden = false;
     this.panel.setAttribute('aria-hidden', 'false');
     this.toggleButton.setAttribute('aria-expanded', 'true');
   }
 
-  hide(): void {
+  hide() {
     this.visible = false;
     this.panel.hidden = true;
     this.panel.setAttribute('aria-hidden', 'true');
     this.toggleButton.setAttribute('aria-expanded', 'false');
   }
 
-  private toggle(): void {
+  toggle() {
     if (this.visible) {
       this.hide();
     } else {
@@ -141,7 +131,7 @@ export class DebuggerOverlay {
     }
   }
 
-  private renderEntry(entry: DebugEntry): void {
+  renderEntry(entry) {
     const item = document.createElement('li');
     item.className = `debug-panel__entry debug-panel__entry--${entry.level}`;
 
@@ -169,7 +159,7 @@ export class DebuggerOverlay {
     this.list.prepend(item);
   }
 
-  private trimList(): void {
+  trimList() {
     while (this.list.childElementCount > this.maxEntries) {
       const last = this.list.lastElementChild;
       if (!last) {
@@ -179,7 +169,7 @@ export class DebuggerOverlay {
     }
   }
 
-  private stringifyPayload(payload: unknown): string {
+  stringifyPayload(payload) {
     if (payload instanceof Error) {
       return `${payload.name}: ${payload.message}` + (payload.stack ? `\n${payload.stack}` : '');
     }
@@ -193,12 +183,12 @@ export class DebuggerOverlay {
     }
   }
 
-  private formatTime(timestamp: number): string {
+  formatTime(timestamp) {
     const date = new Date(timestamp);
     return date.toLocaleTimeString('ru-RU', { hour12: false });
   }
 
-  private async copyEntries(): Promise<void> {
+  async copyEntries() {
     const text = this.entries
       .map((entry) => {
         const isoTime = new Date(entry.timestamp).toISOString();
@@ -228,21 +218,20 @@ export class DebuggerOverlay {
     }
   }
 
-  private clear(): void {
+  clear() {
     this.entries = [];
     this.list.innerHTML = '';
     this.log('debug.log.cleared');
   }
 
-  private exposeToWindow(): void {
-    const globalWindow = window as typeof window & { deadTrainDebug?: DebuggerApi };
-    const api: DebuggerApi = {
+  exposeToWindow() {
+    const api = {
       log: (message, payload, level) => this.log(message, payload, level),
       show: () => this.show(),
       hide: () => this.hide(),
       entries: () => [...this.entries],
       setStatus: (status, level) => this.setStatus(status, level),
     };
-    globalWindow.deadTrainDebug = api;
+    window.deadTrainDebug = api;
   }
 }

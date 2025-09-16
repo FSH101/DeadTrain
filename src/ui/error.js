@@ -1,32 +1,15 @@
-export interface ErrorScreenOptions {
-  title?: string;
-  message: string;
-  description?: string;
-  details?: string;
-  actionLabel?: string;
-  onAction?: () => void;
-}
+/**
+ * @typedef {Object} ErrorScreenOptions
+ * @property {string} [title]
+ * @property {string} message
+ * @property {string} [description]
+ * @property {string} [details]
+ * @property {string} [actionLabel]
+ * @property {() => void} [onAction]
+ */
 
 export class ErrorScreen {
-  private readonly element: HTMLDivElement;
-
-  private readonly content: HTMLDivElement;
-
-  private readonly titleElement: HTMLHeadingElement;
-
-  private readonly messageElement: HTMLParagraphElement;
-
-  private readonly descriptionElement: HTMLParagraphElement;
-
-  private readonly detailsElement: HTMLPreElement;
-
-  private readonly actionButton: HTMLButtonElement;
-
-  private actionHandler: (() => void) | null = null;
-
-  private visible = false;
-
-  constructor(root: HTMLElement) {
+  constructor(root) {
     this.element = document.createElement('div');
     this.element.className = 'error-screen';
     this.element.dataset.role = 'ui-block';
@@ -75,9 +58,12 @@ export class ErrorScreen {
 
     this.element.appendChild(this.content);
     root.appendChild(this.element);
+
+    this.actionHandler = null;
+    this.visible = false;
   }
 
-  show(options: ErrorScreenOptions): void {
+  show(options) {
     this.titleElement.textContent = options.title ?? 'Что-то пошло не так';
     this.messageElement.textContent = options.message;
 
@@ -106,14 +92,14 @@ export class ErrorScreen {
     this.element.setAttribute('aria-hidden', 'false');
   }
 
-  hide(): void {
+  hide() {
     this.visible = false;
     this.element.hidden = true;
     this.element.style.pointerEvents = 'none';
     this.element.setAttribute('aria-hidden', 'true');
   }
 
-  isVisible(): boolean {
+  isVisible() {
     return this.visible;
   }
 }

@@ -1,9 +1,5 @@
 export class FadeController {
-  private readonly element: HTMLDivElement;
-
-  private isActive = false;
-
-  constructor(root: HTMLElement) {
+  constructor(root) {
     this.element = document.createElement('div');
     this.element.style.position = 'absolute';
     this.element.style.inset = '0';
@@ -12,9 +8,10 @@ export class FadeController {
     this.element.style.transition = 'opacity 120ms ease';
     this.element.style.pointerEvents = 'none';
     root.appendChild(this.element);
+    this.isActive = false;
   }
 
-  async fadeOut(): Promise<void> {
+  async fadeOut() {
     if (this.isActive) {
       return;
     }
@@ -23,7 +20,7 @@ export class FadeController {
     await new Promise((resolve) => setTimeout(resolve, 140));
   }
 
-  async fadeIn(): Promise<void> {
+  async fadeIn() {
     this.element.style.opacity = '0';
     await new Promise((resolve) => setTimeout(resolve, 140));
     this.isActive = false;
