@@ -1,32 +1,29 @@
-const buildRectTiles = (startX, startY, width, height, tint) => {
-  const tiles = [];
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
-      tiles.push({
-        tileId: 'floor-metal',
-        position: { x: startX + x, y: startY + y },
-        tint,
-      });
-    }
-  }
-  return tiles;
-};
-
-const wagonAFloor = [
-  ...buildRectTiles(0, 0, 4, 4, '#1e283d'),
-  { tileId: 'floor-metal', position: { x: 4, y: 1 }, tint: '#1e283d', decalId: 'rust' },
-  { tileId: 'floor-metal', position: { x: 4, y: 2 }, tint: '#1e283d' },
+const createFloorWithCar = (spriteId) => [
+  {
+    tileId: 'scene-train-car',
+    position: { x: 2, y: 1.5, z: -20 },
+    drawBase: false,
+    sprite: { id: spriteId },
+  },
 ];
 
-const wagonBFloor = [
-  ...buildRectTiles(0, 0, 4, 4, '#141d31'),
-  { tileId: 'floor-metal', position: { x: 4, y: 1 }, tint: '#19253b', decalId: 'rust' },
-  { tileId: 'floor-metal', position: { x: 4, y: 2 }, tint: '#19253b' },
-];
-
-const wagonCFloor = [
-  ...buildRectTiles(0, 0, 4, 3, '#233050'),
-  { tileId: 'floor-metal', position: { x: 4, y: 1 }, tint: '#2c3f63', decalId: 'rust' },
+const baseNavmesh = [
+  { x: 0, y: 0 },
+  { x: 1, y: 0 },
+  { x: 2, y: 0 },
+  { x: 3, y: 0 },
+  { x: 0, y: 1 },
+  { x: 1, y: 1 },
+  { x: 2, y: 1 },
+  { x: 3, y: 1 },
+  { x: 4, y: 1 },
+  { x: 0, y: 2 },
+  { x: 1, y: 2 },
+  { x: 2, y: 2 },
+  { x: 3, y: 2 },
+  { x: 4, y: 2 },
+  { x: 1, y: 3 },
+  { x: 2, y: 3 },
 ];
 
 export const trainDescriptor = {
@@ -35,37 +32,10 @@ export const trainDescriptor = {
     {
       id: 'car-a',
       title: 'Вагон А — Отсек пассажиров',
-      floor: wagonAFloor,
-      walls: [
-        { tileId: 'wall-metal', position: { x: -1, y: 0 }, tint: '#3a4660', elevation: 96 },
-        { tileId: 'wall-metal', position: { x: -1, y: 1 }, tint: '#3a4660', elevation: 96 },
-        { tileId: 'wall-metal', position: { x: -1, y: 2 }, tint: '#3a4660', elevation: 96 },
-        { tileId: 'wall-metal', position: { x: 0, y: -1 }, tint: '#3a4660', elevation: 96 },
-        { tileId: 'wall-metal', position: { x: 1, y: -1 }, tint: '#3a4660', elevation: 96 },
-        { tileId: 'wall-metal', position: { x: 2, y: -1 }, tint: '#3a4660', elevation: 96 },
-        { tileId: 'wall-metal', position: { x: 3, y: -1 }, tint: '#3a4660', elevation: 96 },
-      ],
-      decals: [
-        { tileId: 'floor-metal', position: { x: 1, y: 2 }, tint: '#1e283d', decalId: 'grime' },
-      ],
-      navmesh: [
-        { x: 0, y: 0 },
-        { x: 1, y: 0 },
-        { x: 2, y: 0 },
-        { x: 3, y: 0 },
-        { x: 0, y: 1 },
-        { x: 1, y: 1 },
-        { x: 2, y: 1 },
-        { x: 3, y: 1 },
-        { x: 4, y: 1 },
-        { x: 0, y: 2 },
-        { x: 1, y: 2 },
-        { x: 2, y: 2 },
-        { x: 3, y: 2 },
-        { x: 4, y: 2 },
-        { x: 1, y: 3 },
-        { x: 2, y: 3 },
-      ],
+      floor: createFloorWithCar('train-car-main'),
+      walls: [],
+      decals: [],
+      navmesh: baseNavmesh,
       spawn: { x: 1, y: 2 },
       doors: [
         {
@@ -76,6 +46,7 @@ export const trainDescriptor = {
           targetWagonId: 'car-b',
           spawnPoint: { x: 0, y: 1 },
           lockedByFlag: 'doorAUnlocked',
+          sprite: { id: 'door-indicator', offset: { x: -32, y: 16 } },
         },
         {
           id: 'car-a-left',
@@ -85,6 +56,7 @@ export const trainDescriptor = {
           targetWagonId: 'car-a',
           spawnPoint: { x: 0, y: 1 },
           blockedIfFlag: 'brokenBackDoor',
+          sprite: { id: 'door-indicator', offset: { x: 48, y: 16 }, scale: 0.9 },
         },
       ],
       npcs: [
@@ -95,6 +67,7 @@ export const trainDescriptor = {
           radius: 40,
           dialogueId: 'conductor',
           idleAnimation: 'loop',
+          sprite: { id: 'npc-conductor' },
         },
       ],
       objects: [
@@ -104,6 +77,7 @@ export const trainDescriptor = {
           position: { x: 2, y: 0 },
           radius: 40,
           onUse: 'luggage-check',
+          sprite: { id: 'object-luggage', offset: { x: 0, y: -32 } },
         },
         {
           id: 'bench',
@@ -111,6 +85,7 @@ export const trainDescriptor = {
           position: { x: 0, y: 2 },
           radius: 36,
           onUse: 'bench-search',
+          sprite: { id: 'object-seat', offset: { x: 0, y: 8 } },
         },
       ],
       hints: [
@@ -124,33 +99,10 @@ export const trainDescriptor = {
     {
       id: 'car-b',
       title: 'Вагон B — Технический отсек',
-      floor: wagonBFloor,
-      walls: [
-        { tileId: 'wall-metal', position: { x: -1, y: 0 }, tint: '#2c3b5a', elevation: 96 },
-        { tileId: 'wall-metal', position: { x: 0, y: -1 }, tint: '#2c3b5a', elevation: 96 },
-        { tileId: 'wall-metal', position: { x: 1, y: -1 }, tint: '#2c3b5a', elevation: 96 },
-        { tileId: 'wall-metal', position: { x: 2, y: -1 }, tint: '#2c3b5a', elevation: 96 },
-        { tileId: 'wall-metal', position: { x: 3, y: -1 }, tint: '#2c3b5a', elevation: 96 },
-      ],
-      decals: [
-        { tileId: 'floor-metal', position: { x: 2, y: 2 }, tint: '#19253b', decalId: 'grime' },
-      ],
-      navmesh: [
-        { x: 0, y: 0 },
-        { x: 1, y: 0 },
-        { x: 2, y: 0 },
-        { x: 3, y: 0 },
-        { x: 0, y: 1 },
-        { x: 1, y: 1 },
-        { x: 2, y: 1 },
-        { x: 3, y: 1 },
-        { x: 4, y: 1 },
-        { x: 0, y: 2 },
-        { x: 1, y: 2 },
-        { x: 2, y: 2 },
-        { x: 3, y: 2 },
-        { x: 4, y: 2 },
-      ],
+      floor: createFloorWithCar('train-car-dark'),
+      walls: [],
+      decals: [],
+      navmesh: baseNavmesh,
       spawn: { x: 0, y: 1 },
       doors: [
         {
@@ -161,6 +113,7 @@ export const trainDescriptor = {
           targetWagonId: 'car-a',
           spawnPoint: { x: 3, y: 1 },
           openByDefault: true,
+          sprite: { id: 'door-indicator', offset: { x: 0, y: 16 }, scale: 0.9 },
         },
         {
           id: 'car-b-right',
@@ -170,6 +123,7 @@ export const trainDescriptor = {
           targetWagonId: 'car-c',
           spawnPoint: { x: 0, y: 1 },
           lockedByFlag: 'powerRestored',
+          sprite: { id: 'door-indicator', offset: { x: -32, y: 16 } },
         },
       ],
       npcs: [
@@ -180,6 +134,7 @@ export const trainDescriptor = {
           radius: 36,
           dialogueId: 'mechanic',
           idleAnimation: 'static',
+          sprite: { id: 'npc-mechanic' },
         },
       ],
       objects: [
@@ -189,6 +144,7 @@ export const trainDescriptor = {
           position: { x: 3, y: 0 },
           radius: 40,
           onUse: 'crate-fuse',
+          sprite: { id: 'object-luggage', offset: { x: 0, y: -28 } },
         },
         {
           id: 'power-panel',
@@ -196,6 +152,7 @@ export const trainDescriptor = {
           position: { x: 1, y: 1 },
           radius: 44,
           onUse: 'panel-power',
+          sprite: { id: 'object-panel', offset: { x: -12, y: -16 } },
         },
       ],
       hints: [
@@ -209,16 +166,9 @@ export const trainDescriptor = {
     {
       id: 'car-c',
       title: 'Кабина машиниста',
-      floor: wagonCFloor,
-      walls: [
-        { tileId: 'wall-metal', position: { x: -1, y: 0 }, tint: '#324468', elevation: 96 },
-        { tileId: 'wall-metal', position: { x: 0, y: -1 }, tint: '#324468', elevation: 96 },
-        { tileId: 'wall-metal', position: { x: 1, y: -1 }, tint: '#324468', elevation: 96 },
-        { tileId: 'wall-metal', position: { x: 2, y: -1 }, tint: '#324468', elevation: 96 },
-      ],
-      decals: [
-        { tileId: 'floor-metal', position: { x: 1, y: 1 }, tint: '#233050', decalId: 'grime' },
-      ],
+      floor: createFloorWithCar('train-car-light'),
+      walls: [],
+      decals: [],
       navmesh: [
         { x: 0, y: 0 },
         { x: 1, y: 0 },
@@ -241,6 +191,7 @@ export const trainDescriptor = {
           targetWagonId: 'car-b',
           spawnPoint: { x: 3, y: 1 },
           openByDefault: true,
+          sprite: { id: 'door-indicator', offset: { x: 0, y: 16 }, scale: 0.9 },
         },
       ],
       npcs: [
@@ -251,6 +202,7 @@ export const trainDescriptor = {
           radius: 40,
           dialogueId: 'engineer',
           idleAnimation: 'loop',
+          sprite: { id: 'npc-engineer' },
         },
       ],
       objects: [
@@ -260,6 +212,7 @@ export const trainDescriptor = {
           position: { x: 1, y: 0 },
           radius: 36,
           onUse: 'console-scan',
+          sprite: { id: 'object-console', offset: { x: -12, y: -20 } },
         },
       ],
       hints: [
