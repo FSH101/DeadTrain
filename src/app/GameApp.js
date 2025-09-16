@@ -55,7 +55,11 @@ export class GameApp {
     this.destroyed = false;
 
     this.buildTargetsForWagon(wagon);
-    window.addEventListener('resize', () => this.display.resize());
+    this.handleViewportResize = () => this.display.resize();
+    window.addEventListener('resize', this.handleViewportResize);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', this.handleViewportResize);
+    }
     this.debug.setStatus('Создание приложения');
     this.debug.log('game.constructor', {
       startWagon: wagon.id,
@@ -252,6 +256,10 @@ export class GameApp {
     }
     if (this.inputRouter) {
       this.inputRouter.detach();
+    }
+    window.removeEventListener('resize', this.handleViewportResize);
+    if (window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', this.handleViewportResize);
     }
     logger.info('GameApp destroyed');
   }
