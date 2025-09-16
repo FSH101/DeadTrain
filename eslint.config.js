@@ -9,7 +9,7 @@ const tsRules = {
 
 export default [
   {
-    ignores: ['dist', 'node_modules', 'eslint.config.js']
+    ignores: ['dist', 'node_modules', 'eslint.config.js', 'vite.config.d.ts']
   },
   js.configs.recommended,
   {

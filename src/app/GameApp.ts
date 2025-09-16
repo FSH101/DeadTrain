@@ -14,6 +14,8 @@ import { trainDescriptor } from '../data/wagons';
 import { DialogueController } from '../ui/dialogue';
 import { HudController } from '../ui/hud';
 import { FadeController } from '../ui/fade';
+import { ErrorScreen } from '../ui/error';
+import { DebuggerOverlay } from '../ui/debugger';
 import { InteractionSystem } from '../systems/InteractionSystem';
 
 const GAME_CONFIG = {
@@ -42,6 +44,10 @@ export class GameApp {
 
   private readonly fade: FadeController;
 
+  private readonly errorScreen: ErrorScreen;
+
+  private readonly debug: DebuggerOverlay;
+
   private readonly train = new TrainGraph(trainDescriptor);
 
   private readonly movement: MovementSystem;
@@ -60,7 +66,15 @@ export class GameApp {
 
   private loopHandle = 0;
 
-  constructor(canvas: HTMLCanvasElement, overlayRoot: HTMLElement) {
+  private fatalError = false;
+
+  private destroyed = false;
+
+  constructor(
+    canvas: HTMLCanvasElement,
+    overlayRoot: HTMLElement,
+    overlays?: { errorScreen?: ErrorScreen; debugOverlay?: DebuggerOverlay },
+  ) {
     this.canvas = canvas;
     this.overlayRoot = overlayRoot;
     this.display = new CanvasDisplay(canvas, GAME_CONFIG);
@@ -68,6 +82,8 @@ export class GameApp {
     this.dialogue = new DialogueController(this.overlayRoot);
     this.fade = new FadeController(this.overlayRoot);
     this.hud = new HudController(this.overlayRoot, this.audio, this.toast);
+    this.errorScreen = overlays?.errorScreen ?? new ErrorScreen(this.overlayRoot);
+    this.debug = overlays?.debugOverlay ?? new DebuggerOverlay(this.overlayRoot);
 
     const wagon = this.train.getCurrentWagon();
     this.state = createRuntimeState(GAME_CONFIG, wagon, this.train.getState());
@@ -76,50 +92,84 @@ export class GameApp {
     this.renderer = new IsometricRenderer(this.display, this.state);
     this.buildTargetsForWagon(wagon);
     window.addEventListener('resize', () => this.display.resize());
+    this.debug.setStatus('Создание приложения');
+    this.debug.log('game.constructor', {
+      startWagon: wagon.id,
+      targets: this.state.currentTargets.length,
+    });
   }
 
   async init(): Promise<void> {
-    const ctx = await this.telegram.init();
-    this.userId = ctx.userId;
-    await this.verifyInitData(ctx.initDataRaw);
-    await this.audio.init();
-    await this.audio.playAmbient('train');
-    this.interaction = new InteractionSystem({
-      state: this.state,
-      movement: this.movement,
-      train: this.train,
-      dialogue: this.dialogue,
-      toast: this.toast,
-      audio: this.audio,
-      userId: this.userId,
-      onTravel: async (wagonId: string, spawnPoint: IsoPoint) => {
-        await this.travelTo(wagonId, spawnPoint);
-      },
-      onStateChanged: () => this.saveGame(),
-    });
-    const haptics: HapticsBridge = {
-      impact: (style: 'light' | 'medium' | 'heavy') => this.telegram.vibrate(style),
-      notify: (style: 'success' | 'warning' | 'error') => this.telegram.notify(style),
-    };
-    this.inputRouter = new InputRouter(this.canvas, this.state, this.interaction, haptics);
-    this.inputRouter.attach();
-    this.tryRestoreSave();
-    this.startLoop();
+    this.debug.log('game.init.start');
+    this.errorScreen.hide();
+    try {
+      const ctx = await this.guard('Получение контекста Telegram', () => this.telegram.init());
+      this.userId = ctx.userId;
+      this.debug.log('telegram.context', {
+        userId: this.userId,
+        hasInitData: Boolean(ctx.initDataRaw),
+      });
+      await this.guard('Проверка данных сессии', () => this.verifyInitData(ctx.initDataRaw));
+      await this.guard('Инициализация аудио', () => this.audio.init());
+      await this.guard('Запуск фонового звука', () => this.audio.playAmbient('train'));
+      await this.guard('Подготовка систем взаимодействия', () => {
+        this.interaction = new InteractionSystem({
+          state: this.state,
+          movement: this.movement,
+          train: this.train,
+          dialogue: this.dialogue,
+          toast: this.toast,
+          audio: this.audio,
+          userId: this.userId,
+          onTravel: async (wagonId: string, spawnPoint: IsoPoint) => {
+            await this.travelTo(wagonId, spawnPoint);
+          },
+          onStateChanged: () => this.saveGame(),
+        });
+        const haptics: HapticsBridge = {
+          impact: (style: 'light' | 'medium' | 'heavy') => this.telegram.vibrate(style),
+          notify: (style: 'success' | 'warning' | 'error') => this.telegram.notify(style),
+        };
+        this.inputRouter = new InputRouter(this.canvas, this.state, this.interaction, haptics);
+        this.inputRouter.attach();
+      });
+      await this.guard('Загрузка сохранения', () => this.tryRestoreSave());
+      this.startLoop();
+      this.debug.setStatus('Игра запущена');
+      this.debug.log('game.init.complete');
+    } catch (error) {
+      this.handleFatalError(error, 'инициализация');
+      throw error;
+    }
   }
 
   private tryRestoreSave(): void {
-    const save = loadSave(this.userId);
-    if (!save) {
-      return;
+    this.debug.log('save.restore.start');
+    try {
+      const save = loadSave(this.userId);
+      if (!save) {
+        this.debug.log('save.restore.empty');
+        return;
+      }
+      applySaveToState(this.state, save);
+      this.refreshDoorsFromFlags();
+      const wagon = this.train.travelTo(save.wagonId);
+      this.state.wagon = wagon;
+      this.movement.setNavMesh(wagon.navmesh);
+      this.state.player.position = save.position;
+      this.state.player.path = [];
+      this.buildTargetsForWagon(wagon);
+      this.debug.log('save.restore.success', {
+        wagonId: save.wagonId,
+        flags: save.flags.length,
+        endings: save.endings.length,
+        inventory: Object.keys(save.inventory ?? {}).length,
+      });
+    } catch (error) {
+      console.error('Failed to restore save', error);
+      this.debug.log('save.restore.error', error instanceof Error ? error : String(error), 'warn');
+      this.toast.show('Сохранение повреждено. Начинаем заново.');
     }
-    applySaveToState(this.state, save);
-    this.refreshDoorsFromFlags();
-    const wagon = this.train.travelTo(save.wagonId);
-    this.state.wagon = wagon;
-    this.movement.setNavMesh(wagon.navmesh);
-    this.state.player.position = save.position;
-    this.state.player.path = [];
-    this.buildTargetsForWagon(wagon);
   }
 
   private refreshDoorsFromFlags(): void {
@@ -134,7 +184,10 @@ export class GameApp {
 
   private buildTargetsForWagon(wagon: WagonLayerData): void {
     const targets: InteractionTarget[] = [];
-    wagon.doors.forEach((door) => {
+    const doors = wagon.doors ?? [];
+    const npcs = wagon.npcs ?? [];
+    const objects = wagon.objects ?? [];
+    doors.forEach((door) => {
       targets.push({
         id: door.id,
         kind: 'door',
@@ -143,7 +196,7 @@ export class GameApp {
         metadata: { door: { wagonId: wagon.id, descriptor: door } },
       });
     });
-    wagon.npcs.forEach((npc) => {
+    npcs.forEach((npc) => {
       targets.push({
         id: npc.id,
         kind: 'npc',
@@ -152,7 +205,7 @@ export class GameApp {
         metadata: { dialogueId: npc.dialogueId, name: npc.name },
       });
     });
-    wagon.objects.forEach((object) => {
+    objects.forEach((object) => {
       targets.push({
         id: object.id,
         kind: 'object',
@@ -162,6 +215,7 @@ export class GameApp {
       });
     });
     this.state.currentTargets = targets;
+    this.debug.log('targets.updated', { wagonId: wagon.id, targets: targets.length });
   }
 
   private async travelTo(wagonId: string, spawnPoint: IsoPoint): Promise<void> {
@@ -177,6 +231,7 @@ export class GameApp {
     await this.audio.playAmbient(wagon.ambient === 'dark' ? 'dark' : 'train');
     await this.fade.fadeIn();
     this.saveGame();
+    this.debug.log('travel.complete', { wagonId, spawnPoint });
   }
 
   private saveGame(): void {
@@ -199,26 +254,85 @@ export class GameApp {
     } catch (error) {
       console.error('InitData validation failed', error);
       this.toast.show('Проверка Telegram недоступна.');
+      this.debug.log('telegram.validation.failed', error instanceof Error ? error : String(error), 'warn');
     }
   }
 
   private startLoop(): void {
     const tick = (time: number) => {
+      if (this.destroyed || this.fatalError) {
+        return;
+      }
       const delta = (time - this.lastTime) / 1000;
       this.lastTime = time;
-      this.movement.update(delta);
-      this.renderer.render(delta);
+      try {
+        this.movement.update(delta);
+        this.renderer.render(delta);
+      } catch (error) {
+        this.handleFatalError(error, 'игровой цикл');
+        return;
+      }
       this.loopHandle = requestAnimationFrame(tick);
     };
     this.loopHandle = requestAnimationFrame(tick);
   }
 
   destroy(): void {
+    this.destroyed = true;
     if (this.loopHandle) {
       cancelAnimationFrame(this.loopHandle);
     }
     if (this.inputRouter) {
       this.inputRouter.detach();
+    }
+  }
+
+  private async guard<T>(stage: string, task: () => Promise<T> | T): Promise<T> {
+    this.debug.setStatus(`${stage}...`);
+    this.debug.log('stage.start', { stage });
+    try {
+      const result = await task();
+      this.debug.log('stage.success', { stage });
+      return result;
+    } catch (error) {
+      this.debug.setStatus(`Ошибка: ${stage}`, 'error');
+      this.debug.log('stage.error', { stage, error: this.describeError(error) }, 'error');
+      throw error;
+    }
+  }
+
+  private handleFatalError(error: unknown, stage: string): void {
+    if (this.fatalError) {
+      return;
+    }
+    this.fatalError = true;
+    this.destroy();
+    const normalized = this.describeError(error);
+    console.error(`Fatal error during ${stage}`, error);
+    this.debug.setStatus(`Критическая ошибка: ${stage}`, 'error');
+    this.debug.log('fatal', { stage, error: normalized }, 'error');
+    this.errorScreen.show({
+      title: 'Не удалось запустить игру',
+      message: `Этап «${stage}» завершился с ошибкой.`,
+      description:
+        'Попробуйте перезагрузить приложение. Если проблема повторяется, откройте отладчик (кнопка 🐞) и отправьте лог разработчику.',
+      details: normalized.stack ?? normalized.message,
+      actionLabel: 'Перезагрузить приложение',
+      onAction: () => window.location.reload(),
+    });
+  }
+
+  private describeError(error: unknown): { message: string; stack?: string } {
+    if (error instanceof Error) {
+      return { message: error.message, stack: error.stack ?? undefined };
+    }
+    if (typeof error === 'string') {
+      return { message: error };
+    }
+    try {
+      return { message: JSON.stringify(error) };
+    } catch (serializationError) {
+      return { message: String(serializationError ?? error) };
     }
   }
 }

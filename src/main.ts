@@ -1,4 +1,6 @@
 import { GameApp } from './app/GameApp';
+import { ErrorScreen } from './ui/error';
+import { DebuggerOverlay } from './ui/debugger';
 
 const bootstrap = async () => {
   const canvas = document.querySelector<HTMLCanvasElement>('#game');
@@ -6,9 +8,42 @@ const bootstrap = async () => {
   if (!canvas || !overlay) {
     throw new Error('Missing canvas or overlay root');
   }
-  const app = new GameApp(canvas, overlay);
-  await app.init();
-  window.addEventListener('beforeunload', () => app.destroy());
+  const debugOverlay = new DebuggerOverlay(overlay);
+  const errorScreen = new ErrorScreen(overlay);
+  let app: GameApp | null = null;
+  try {
+    app = new GameApp(canvas, overlay, { errorScreen, debugOverlay });
+  } catch (error) {
+    const normalized = error instanceof Error ? error : new Error(String(error));
+    console.error('Failed to construct game', normalized);
+    debugOverlay.log('bootstrap.construct.failed', { message: normalized.message }, 'error');
+    errorScreen.show({
+      title: 'Ошибка запуска',
+      message: 'Не удалось подготовить игровое приложение.',
+      details: normalized.stack ?? normalized.message,
+      actionLabel: 'Перезагрузить',
+      onAction: () => window.location.reload(),
+    });
+    throw normalized;
+  }
+  try {
+    await app.init();
+    window.addEventListener('beforeunload', () => app?.destroy());
+  } catch (error) {
+    const normalized = error instanceof Error ? error : new Error(String(error));
+    console.error('Failed to bootstrap game', normalized);
+    debugOverlay.log('bootstrap.init.failed', { message: normalized.message }, 'error');
+    if (!errorScreen.isVisible()) {
+      errorScreen.show({
+        title: 'Ошибка запуска',
+        message: 'Не удалось инициализировать приложение.',
+        details: normalized.stack ?? normalized.message,
+        actionLabel: 'Перезагрузить',
+        onAction: () => window.location.reload(),
+      });
+    }
+    throw normalized;
+  }
 };
 
 if (document.readyState === 'complete' || document.readyState === 'interactive') {

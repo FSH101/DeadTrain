@@ -1,6 +1,7 @@
 import { Buffer } from 'buffer';
 import crypto from 'crypto';
 import type { IncomingMessage, ServerResponse } from 'http';
+import type { Readable } from 'stream';
 import process from 'process';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? '';
@@ -45,8 +46,15 @@ const parseBody = async (
     }
   }
   const chunks: Buffer[] = [];
-  for await (const chunk of req as AsyncIterable<Buffer | string>) {
-    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+  const stream = req as Readable;
+  for await (const chunk of stream) {
+    if (typeof chunk === 'string') {
+      chunks.push(Buffer.from(chunk));
+    } else if (Buffer.isBuffer(chunk)) {
+      chunks.push(chunk);
+    } else {
+      chunks.push(Buffer.from(chunk));
+    }
   }
   if (chunks.length === 0) {
     return {};
