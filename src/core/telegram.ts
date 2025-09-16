@@ -4,13 +4,13 @@ type TelegramUser = {
 };
 
 type TelegramWebApp = {
-  initData: string;
+  initData?: string;
   initDataUnsafe?: {
     user?: TelegramUser;
   };
-  ready(): void;
-  expand(): void;
-  enableClosingConfirmation(): void;
+  ready?: () => void;
+  expand?: () => void;
+  enableClosingConfirmation?: () => void;
   themeParams?: {
     secondary_bg_color?: string;
     text_color?: string;
@@ -37,29 +37,46 @@ export class TelegramBridge {
 
   private ctx: TelegramContext | null = null;
 
+  private createFallbackContext(): TelegramContext {
+    return { userId: 'local-user', initDataRaw: '', username: undefined };
+  }
+
   init(): Promise<TelegramContext> {
     const tg = resolveWebApp();
+    const fallback = this.createFallbackContext();
     if (!tg) {
-      const fallback: TelegramContext = { userId: 'local-user', initDataRaw: '', username: undefined };
       this.ctx = fallback;
       return Promise.resolve(fallback);
     }
-    this.webApp = tg;
-    const raw = tg.initData ?? '';
-    const userId = tg.initDataUnsafe?.user?.id?.toString() ?? 'local-user';
-    const username = tg.initDataUnsafe?.user?.username;
-    this.ctx = { userId, username, initDataRaw: raw };
-    tg.ready();
-    tg.expand();
-    tg.enableClosingConfirmation();
-    const theme = tg.themeParams;
-    if (theme?.secondary_bg_color) {
-      document.documentElement.style.setProperty('--tg-bg', theme.secondary_bg_color);
+    try {
+      this.webApp = tg;
+      const raw = typeof tg.initData === 'string' ? tg.initData : '';
+      const userId = tg.initDataUnsafe?.user?.id !== undefined ? tg.initDataUnsafe.user.id.toString() : fallback.userId;
+      const username = tg.initDataUnsafe?.user?.username;
+      this.ctx = { userId, username, initDataRaw: raw };
+      if (typeof tg.ready === 'function') {
+        tg.ready();
+      }
+      if (typeof tg.expand === 'function') {
+        tg.expand();
+      }
+      if (typeof tg.enableClosingConfirmation === 'function') {
+        tg.enableClosingConfirmation();
+      }
+      const theme = tg.themeParams;
+      if (theme?.secondary_bg_color) {
+        document.documentElement.style.setProperty('--tg-bg', theme.secondary_bg_color);
+      }
+      if (theme?.text_color) {
+        document.documentElement.style.setProperty('--tg-text', theme.text_color);
+      }
+      return Promise.resolve(this.ctx);
+    } catch (error) {
+      console.warn('Telegram Web App initialization failed, falling back to local context.', error);
+      this.webApp = null;
+      this.ctx = fallback;
+      return Promise.resolve(fallback);
     }
-    if (theme?.text_color) {
-      document.documentElement.style.setProperty('--tg-text', theme.text_color);
-    }
-    return Promise.resolve(this.ctx);
   }
 
   getContext(): TelegramContext {
