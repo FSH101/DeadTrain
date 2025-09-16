@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Призрачная электричка — Изометрия</title>
+  <title>Электричка внутри — Призрачная изометрия</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -16,9 +16,17 @@
   <div class="game-background" aria-hidden="true"></div>
   <div class="game-overlay"></div>
   <div class="game-wrapper">
+    <section class="game-title" aria-labelledby="game-title-heading">
+      <p class="game-title__eyebrow">Призрачная электричка</p>
+      <h1 id="game-title-heading" class="game-title__text">Электричка внутри</h1>
+      <p class="game-title__description">
+        Исследуй призрачный состав: нажимай на пассажиров и двери, чтобы услышать их истории
+        и выбраться из ночной электрички.
+      </p>
+    </section>
     <header class="hud" aria-live="polite">
       <div class="hud__scene">
-        <h1 id="hud-scene-title" class="hud__title"></h1>
+        <h2 id="hud-scene-title" class="hud__title"></h2>
         <p id="hud-scene-subtitle" class="hud__subtitle"></p>
       </div>
       <div id="hud-flags" class="hud__flags" aria-live="polite"></div>

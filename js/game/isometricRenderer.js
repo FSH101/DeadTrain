@@ -51,7 +51,7 @@ export class IsometricRenderer {
         return;
       }
 
-      const element = this._createObjectElement(object, metrics, state);
+      const element = this._createObjectElement(scene, object, metrics, state);
       objectsFragment.appendChild(element);
     });
 
@@ -69,7 +69,7 @@ export class IsometricRenderer {
     return tile;
   }
 
-  _createObjectElement(object, metrics, state) {
+  _createObjectElement(scene, object, metrics, state) {
     const isInteractive = Boolean(object.scriptId);
     const element = document.createElement(isInteractive ? 'button' : 'div');
 
@@ -81,12 +81,17 @@ export class IsometricRenderer {
       element.dataset.objectId = object.id;
       element.setAttribute('aria-label', object.label ?? '');
       element.title = object.label ?? '';
-      element.addEventListener('pointerup', (event) => {
+
+      const activate = (event) => {
         event.preventDefault();
         this._notifyInteraction(element);
-      });
+      };
+
+      element.addEventListener('click', activate);
       element.addEventListener('pointerdown', (event) => {
-        event.preventDefault();
+        if (event.pointerType && event.pointerType !== 'mouse') {
+          event.preventDefault();
+        }
       });
     } else if (object.label) {
       element.setAttribute('aria-hidden', 'true');
@@ -115,7 +120,97 @@ export class IsometricRenderer {
       });
     }
 
+    if (isInteractive && object.label) {
+      const badge = this._createObjectBadge(scene, object);
+
+      if (badge) {
+        element.appendChild(badge);
+      }
+    }
+
     return element;
+  }
+
+  _createObjectBadge(scene, object) {
+    const label = object?.label;
+
+    if (!label) {
+      return null;
+    }
+
+    const badge = document.createElement('span');
+    badge.className = 'iso-object__badge';
+    badge.setAttribute('aria-hidden', 'true');
+
+    const category = this._resolveObjectCategory(object);
+
+    if (category) {
+      badge.classList.add(`iso-object__badge--${category}`);
+    }
+
+    const align = this._resolveBadgeAlign(scene, object);
+
+    if (align && align !== 'center') {
+      badge.classList.add(`iso-object__badge--align-${align}`);
+    }
+
+    const icon = this._createBadgeIcon(category);
+
+    if (icon) {
+      badge.appendChild(icon);
+    }
+
+    const text = document.createElement('span');
+    text.className = 'iso-object__badge-text';
+    text.textContent = label;
+    badge.appendChild(text);
+
+    return badge;
+  }
+
+  _resolveBadgeAlign(scene, object) {
+    const sceneWidth = Number(scene?.width);
+    const positionX = Number(object?.position?.x);
+
+    if (!Number.isFinite(sceneWidth) || !Number.isFinite(positionX)) {
+      return 'center';
+    }
+
+    if (positionX <= 1) {
+      return 'left';
+    }
+
+    if (positionX >= sceneWidth - 1) {
+      return 'right';
+    }
+
+    return 'center';
+  }
+
+  _resolveObjectCategory(object) {
+    const sprite = String(object?.sprite ?? '');
+
+    if (sprite.startsWith('door')) {
+      return 'door';
+    }
+
+    if (sprite.startsWith('npc') || sprite === 'engineer') {
+      return 'passenger';
+    }
+
+    return 'device';
+  }
+
+  _createBadgeIcon(category) {
+    if (!category) {
+      return null;
+    }
+
+    const icon = document.createElement('span');
+    icon.className = `iso-object__badge-icon iso-object__badge-icon--${category}`;
+    icon.setAttribute('aria-hidden', 'true');
+
+    return icon;
   }
 
   _notifyInteraction(element) {
