@@ -45,7 +45,21 @@ export class AudioManager {
     this.gain.connect(this.context.destination);
     this.stepBuffer = createStepBuffer(this.context);
     this.initialized = true;
-    await this.context.resume();
+
+    try {
+      const resumePromise = this.context.resume();
+      if (resumePromise instanceof Promise) {
+        resumePromise.catch((error) => {
+          console.warn('AudioContext resume rejected', error);
+        });
+        await Promise.race([
+          resumePromise,
+          new Promise((resolve) => setTimeout(resolve, 250)),
+        ]);
+      }
+    } catch (error) {
+      console.warn('AudioContext resume failed', error);
+    }
   }
 
   async ensure() {
