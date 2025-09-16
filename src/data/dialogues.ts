@@ -1,0 +1,180 @@
+import type { DialogueScript } from '../types';
+
+export const dialogues: DialogueScript[] = [
+  {
+    id: 'conductor',
+    nodes: [
+      {
+        id: 'intro',
+        type: 'line',
+        speaker: 'Дежурный',
+        text: 'Очнулся? Состав застрял между станциями. Дальше темнота и двери не слушаются.',
+        next: 'options',
+        setFlag: 'metConductor',
+      },
+      {
+        id: 'options',
+        type: 'choice',
+        speaker: 'Дежурный',
+        text: 'Если ищешь выход — докажи, что не очередная иллюзия.',
+        options: [
+          { id: 'ask', label: 'Что случилось с дверью?', next: 'explain' },
+          {
+            id: 'ticket',
+            label: 'Вот билет, пропусти меня',
+            next: 'thanks',
+            requiresItem: 'ticket',
+            removeItem: 'ticket',
+            giveItem: 'access_card',
+            setFlag: 'doorAUnlocked',
+            haptic: 'success',
+          },
+          {
+            id: 'pressure',
+            label: 'Я нашёл монтировку. Отойди.',
+            next: 'unlock',
+            requiresFlag: 'hasCrowbar',
+            setFlag: 'doorAUnlocked',
+            haptic: 'impact',
+          },
+          { id: 'leave', label: 'Я вернусь позже', next: null },
+        ],
+      },
+      {
+        id: 'explain',
+        type: 'line',
+        speaker: 'Дежурный',
+        text: 'Замок заело после обрыва питания. Кто-то в техническом вагоне выкрутил предохранитель.',
+        next: 'options',
+      },
+      {
+        id: 'thanks',
+        type: 'line',
+        speaker: 'Дежурный',
+        text: 'Билет настоящий... Ладно. Вот аварийная карта. Дверь справа разблокирована.',
+        next: 'options',
+      },
+      {
+        id: 'unlock',
+        type: 'line',
+        speaker: 'Дежурный',
+        text: 'Не надо ломать вагон. Я сам отведу замок. Дальше держи ухо востро.',
+        next: 'options',
+      },
+    ],
+  },
+  {
+    id: 'mechanic',
+    nodes: [
+      {
+        id: 'intro',
+        type: 'line',
+        speaker: 'Голос в темноте',
+        text: 'Не наступай на рельсы... Ты приносишь свет? Без предохранителя мы застрянем навсегда.',
+        next: 'choices',
+      },
+      {
+        id: 'choices',
+        type: 'choice',
+        speaker: 'Голос',
+        text: 'За панелью слева есть гнездо. Ищи ящик с маркировкой ОВ-17.',
+        options: [
+          {
+            id: 'ask-crate',
+            label: 'Где искать ящик?',
+            next: 'hint',
+          },
+          {
+            id: 'have-fuse',
+            label: 'У меня есть предохранитель',
+            next: 'return-power',
+            requiresItem: 'fuse',
+            haptic: 'success',
+          },
+          { id: 'leave', label: 'Я пойду посмотрю', next: null },
+        ],
+      },
+      {
+        id: 'hint',
+        type: 'line',
+        speaker: 'Голос',
+        text: 'В ящике у стены. Только аккуратно, там ржавчина — обожжёшь руки.',
+        next: 'choices',
+      },
+      {
+        id: 'return-power',
+        type: 'line',
+        speaker: 'Голос',
+        text: 'Вставь его в щиток. Свет вернётся — и путь в кабину откроется.',
+        next: 'choices',
+      },
+    ],
+  },
+  {
+    id: 'engineer',
+    nodes: [
+      {
+        id: 'intro',
+        type: 'line',
+        speaker: 'Машинист',
+        text: 'Ты дошёл до кабины... Значит поезд ещё слушает кого-то живого.',
+        next: 'options',
+        setFlag: 'metEngineer',
+      },
+      {
+        id: 'options',
+        type: 'choice',
+        speaker: 'Машинист',
+        text: 'Решай быстро. Мы можем освободить состав, вернуть его в цикл или отпустить всех призраков.',
+        options: [
+          {
+            id: 'free',
+            label: 'Отключить тормоза и уйти',
+            next: 'ending-escape',
+            requiresFlag: 'powerRestored',
+            requiresItem: 'access_card',
+            setFlag: 'endingEscape',
+            haptic: 'success',
+          },
+          {
+            id: 'loop',
+            label: 'Запустить петлю, чтобы найти ответы',
+            next: 'ending-loop',
+            setFlag: 'endingLoop',
+            haptic: 'impact',
+          },
+          {
+            id: 'stay',
+            label: 'Остаться и держать состав здесь',
+            next: 'ending-stay',
+            setFlag: 'endingStay',
+            haptic: 'warning',
+          },
+        ],
+      },
+      {
+        id: 'ending-escape',
+        type: 'ending',
+        title: 'Финал: Свобода',
+        text: 'Ты возвращаешь питание, сбрасываешь тормоза и выводишь состав к свету. Холодный туман остаётся позади.',
+        endingId: 'escape',
+      },
+      {
+        id: 'ending-loop',
+        type: 'ending',
+        title: 'Финал: Петля',
+        text: 'Поезд делает полный круг, снова входя в туннель. Воспоминания перемешиваются, но ответы где-то рядом.',
+        endingId: 'loop',
+      },
+      {
+        id: 'ending-stay',
+        type: 'ending',
+        title: 'Финал: Страж',
+        text: 'Ты остаёшься сторожем состава, держа тьму на расстоянии. Кто-нибудь когда-нибудь сменит тебя.',
+        endingId: 'stay',
+      },
+    ],
+  },
+];
+
+export const getDialogue = (id: string): DialogueScript | undefined => dialogues.find((dialogue) => dialogue.id === id);
