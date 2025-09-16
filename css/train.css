@@ -231,6 +231,110 @@ body::after {
   margin-top: 0.45rem;
 }
 
+.story-scene {
+  position: relative;
+  width: 100%;
+  margin: 0 0 1.2rem;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 38px rgba(8, 8, 12, 0.55);
+  isolation: isolate;
+  background: radial-gradient(circle at 20% 20%, rgba(54, 69, 79, 0.55), rgba(15, 19, 26, 0.9));
+}
+
+.story-scene + .step-note {
+  margin-top: 1rem;
+}
+
+.story-scene__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: saturate(95%) contrast(102%);
+}
+
+.story-scene__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+.scene-hotspot {
+  position: absolute;
+  border: 1px solid rgba(212, 196, 255, 0.8);
+  background: linear-gradient(135deg, rgba(70, 54, 120, 0.75), rgba(24, 18, 48, 0.8));
+  color: #f7f4ff;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-radius: 16px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.2s ease, box-shadow 0.25s ease, background 0.3s ease;
+  box-shadow: 0 10px 20px rgba(12, 10, 26, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.scene-hotspot:hover,
+.scene-hotspot:focus-visible {
+  outline: none;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 18px 30px rgba(91, 44, 137, 0.45);
+  background: linear-gradient(135deg, rgba(120, 88, 180, 0.85), rgba(34, 26, 58, 0.95));
+}
+
+.scene-hotspot__label {
+  padding: 8px 12px;
+  display: block;
+  line-height: 1.2;
+}
+
+.scene-hotspot--passenger {
+  border-radius: 40px;
+  padding: 10px 12px;
+}
+
+.scene-hotspot--door {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 0.1em;
+  border-radius: 18px;
+}
+
+.scene-hotspot--exit {
+  border-radius: 24px;
+  padding: 10px 14px;
+}
+
+.scene-hotspot--exit .scene-hotspot__label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  justify-content: center;
+}
+
+.scene-hotspot--exit .scene-hotspot__label::before {
+  content: '\2190';
+  font-size: 1.1rem;
+}
+
+.story-actions--visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 @media (max-width: 600px) {
   .overlay {
     padding: 32px 16px;
@@ -253,6 +357,10 @@ body::after {
   .story-action {
     font-size: 0.95rem;
     padding: 12px 18px;
+  }
+
+  .scene-hotspot {
+    font-size: 0.78rem;
   }
 }
 

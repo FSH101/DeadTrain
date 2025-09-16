@@ -106,9 +106,21 @@ export class DomRenderer {
       this._appendParagraph(node.description, 'step-note');
     }
 
+    const options = Array.isArray(node.options) ? node.options : [];
+    let hideActions = false;
+
+    if (node.scene) {
+      hideActions = Boolean(node.scene.hideActions);
+      this._renderScene(node.scene, options);
+    }
+
     const actions = this._createActionsContainer();
 
-    node.options.forEach((option, index) => {
+    if (hideActions) {
+      actions.classList.add('story-actions--visually-hidden');
+    }
+
+    options.forEach((option, index) => {
       const button = this._createButton(option.text);
 
       button.addEventListener('click', () => {
@@ -220,6 +232,123 @@ export class DomRenderer {
     button.className = 'story-action';
     button.textContent = label;
     return button;
+  }
+
+  _renderScene(scene, options) {
+    if (!scene?.image) {
+      return;
+    }
+
+    const figure = document.createElement('figure');
+    figure.className = 'story-scene';
+
+    if (scene.label) {
+      figure.setAttribute('aria-label', scene.label);
+    }
+
+    const image = document.createElement('img');
+    image.className = 'story-scene__image';
+    image.src = scene.image;
+    image.alt = scene.alt ?? '';
+    figure.appendChild(image);
+
+    const overlay = document.createElement('div');
+    overlay.className = 'story-scene__overlay';
+    figure.appendChild(overlay);
+
+    if (Array.isArray(scene.hotspots)) {
+      scene.hotspots.forEach((hotspot) => {
+        if (typeof hotspot.optionIndex !== 'number') {
+          return;
+        }
+
+        const option = options?.[hotspot.optionIndex];
+
+        if (!option) {
+          return;
+        }
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = ['scene-hotspot', hotspot.className].filter(Boolean).join(' ');
+
+        const accessibleLabel = hotspot.label ?? option.text;
+
+        if (accessibleLabel) {
+          button.setAttribute('aria-label', accessibleLabel);
+        }
+
+        if (hotspot.left) {
+          button.style.left = hotspot.left;
+        }
+
+        if (hotspot.right) {
+          button.style.right = hotspot.right;
+        }
+
+        if (hotspot.top) {
+          button.style.top = hotspot.top;
+        }
+
+        if (hotspot.bottom) {
+          button.style.bottom = hotspot.bottom;
+        }
+
+        if (hotspot.width) {
+          button.style.width = hotspot.width;
+        }
+
+        if (hotspot.height) {
+          button.style.height = hotspot.height;
+        }
+
+        const alignment = hotspot.align;
+
+        switch (alignment) {
+          case 'center':
+            button.style.transform = 'translate(-50%, -50%)';
+            break;
+          case 'center-right':
+            button.style.transform = 'translate(0, -50%)';
+            break;
+          case 'center-left':
+            button.style.transform = 'translate(-100%, -50%)';
+            break;
+          case 'top-center':
+            button.style.transform = 'translate(-50%, 0)';
+            break;
+          case 'bottom-center':
+            button.style.transform = 'translate(-50%, -100%)';
+            break;
+          case 'bottom-right':
+            button.style.transform = 'translate(-100%, -100%)';
+            break;
+          default:
+            break;
+        }
+
+        const label = document.createElement('span');
+        label.className = 'scene-hotspot__label';
+        label.textContent = hotspot.text ?? option.text ?? '';
+        button.appendChild(label);
+
+        button.addEventListener('click', () => {
+          this.engine.choose(hotspot.optionIndex);
+          this.render();
+        });
+
+        overlay.appendChild(button);
+      });
+    }
+
+    this.container.appendChild(figure);
+
+    if (scene.caption) {
+      const caption = document.createElement('p');
+      caption.className = 'step-note';
+      caption.textContent = scene.caption;
+      this.container.appendChild(caption);
+    }
   }
 
   _applyWagonTransition(previousWagonId, currentWagonId) {
