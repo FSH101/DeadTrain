@@ -18,7 +18,8 @@ export class CanvasDisplay {
       throw new Error('Failed to create buffer context');
     }
     this.bufferCtx = bufferCtx;
-    this.scale = 1;
+    this.scaleX = 1;
+    this.scaleY = 1;
     this.configureSmoothing();
     this.resize();
   }
@@ -29,14 +30,26 @@ export class CanvasDisplay {
   }
 
   resize() {
-    const { innerWidth, innerHeight } = window;
-    const scaleX = Math.floor(innerWidth / this.config.virtualWidth) || 1;
-    const scaleY = Math.floor(innerHeight / this.config.virtualHeight) || 1;
-    this.scale = Math.max(1, Math.min(scaleX, scaleY));
-    this.canvas.width = this.config.virtualWidth * this.scale;
-    this.canvas.height = this.config.virtualHeight * this.scale;
-    this.canvas.style.width = `${this.canvas.width}px`;
-    this.canvas.style.height = `${this.canvas.height}px`;
+    const viewport = window.visualViewport;
+    const cssWidth = Math.max(
+      1,
+      Math.ceil(viewport?.width ?? window.innerWidth ?? this.config.virtualWidth),
+    );
+    const cssHeight = Math.max(
+      1,
+      Math.ceil(viewport?.height ?? window.innerHeight ?? this.config.virtualHeight),
+    );
+    const pixelRatio = window.devicePixelRatio ?? 1;
+    const pixelWidth = Math.max(1, Math.ceil(cssWidth * pixelRatio));
+    const pixelHeight = Math.max(1, Math.ceil(cssHeight * pixelRatio));
+
+    this.canvas.width = pixelWidth;
+    this.canvas.height = pixelHeight;
+    this.canvas.style.width = `${cssWidth}px`;
+    this.canvas.style.height = `${cssHeight}px`;
+
+    this.scaleX = this.canvas.width / this.config.virtualWidth;
+    this.scaleY = this.canvas.height / this.config.virtualHeight;
     this.configureSmoothing();
   }
 
@@ -52,12 +65,12 @@ export class CanvasDisplay {
     this.ctx.save();
     this.ctx.imageSmoothingEnabled = false;
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.scale(this.scale, this.scale);
+    this.ctx.scale(this.scaleX, this.scaleY);
     this.ctx.drawImage(this.buffer, 0, 0);
     this.ctx.restore();
   }
 
   getScale() {
-    return this.scale;
+    return { x: this.scaleX, y: this.scaleY };
   }
 }
