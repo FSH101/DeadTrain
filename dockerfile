@@ -1,17 +1,23 @@
-# Используем официальный образ PHP с Apache
+# Этап сборки фронтенда
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+# Этап доставки собранного бандла
 FROM php:7.4-apache
 
-# Включаем mod_rewrite
 RUN a2enmod rewrite
 
-# Копируем проект
-COPY . /var/www/html/
+COPY --from=build /app/dist/ /var/www/html/
 
-# Создаём папку userdata и даём права
 RUN mkdir -p /var/www/html/userdata && chmod -R 777 /var/www/html/userdata
 
-# Открываем порт 80
 EXPOSE 80
 
-# Запускаем Apache
 CMD ["apache2-foreground"]
