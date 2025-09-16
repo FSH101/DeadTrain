@@ -1,3 +1,5 @@
+import { createLogger } from '../core/logging.js';
+
 /** @typedef {'info' | 'warn' | 'error'} DebugLevel */
 
 /**
@@ -84,6 +86,7 @@ export class DebuggerOverlay {
     this.maxEntries = 80;
     this.entries = [];
     this.visible = false;
+    this.logger = createLogger('ui.debugger');
 
     this.exposeToWindow();
   }
@@ -213,7 +216,7 @@ export class DebuggerOverlay {
       }
       this.log('debug.copy.success');
     } catch (error) {
-      console.error('Failed to copy debug log', error);
+      this.logger.error('Failed to copy debug log', error);
       this.log('debug.copy.error', error instanceof Error ? error : String(error), 'warn');
     }
   }
