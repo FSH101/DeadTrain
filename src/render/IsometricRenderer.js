@@ -12,6 +12,43 @@ const NPC_COLOR = '#e6b35c';
 const DOOR_COLOR = '#6e8cff';
 const OBJECT_COLOR = '#6bd6cb';
 
+const DEFAULT_ANCHOR = { x: 0.5, y: 1 };
+
+const drawSpriteInstance = (ctx, assets, placement, screen, extra = {}) => {
+  if (!placement || !placement.id || !assets) {
+    return false;
+  }
+  const sprite = assets.get(placement.id);
+  if (!sprite) {
+    return false;
+  }
+  const baseAnchor = placement.anchor ?? sprite.definition.anchor ?? DEFAULT_ANCHOR;
+  const anchor = {
+    x: extra.anchor?.x ?? baseAnchor.x,
+    y: extra.anchor?.y ?? baseAnchor.y,
+  };
+  const scale =
+    (sprite.definition.scale ?? 1) * (placement.scale ?? 1) * (extra.scale ?? 1);
+  const width = sprite.image.width * scale;
+  const height = sprite.image.height * scale;
+  const baseOffset = {
+    x: (sprite.definition.offset?.x ?? 0) + (placement.offset?.x ?? 0),
+    y: (sprite.definition.offset?.y ?? 0) + (placement.offset?.y ?? 0),
+  };
+  const offset = {
+    x: baseOffset.x + (extra.offset?.x ?? 0),
+    y: baseOffset.y + (extra.offset?.y ?? 0),
+  };
+  ctx.drawImage(
+    sprite.image,
+    screen.x - anchor.x * width + offset.x,
+    screen.y - anchor.y * height + offset.y,
+    width,
+    height,
+  );
+  return true;
+};
+
 const drawLights = (ctx, lights, config, elapsed) => {
   if (!lights || lights.length === 0) {
     return;
@@ -34,8 +71,11 @@ const drawLights = (ctx, lights, config, elapsed) => {
   ctx.restore();
 };
 
-const drawDoor = (ctx, door, config) => {
+const drawDoor = (ctx, door, config, assets) => {
   const screen = isoToScreen(door.position, config.tileWidth, config.tileHeight);
+  if (drawSpriteInstance(ctx, assets, door.sprite, screen)) {
+    return;
+  }
   ctx.save();
   ctx.fillStyle = DOOR_COLOR;
   ctx.globalAlpha = 0.85;
@@ -45,10 +85,17 @@ const drawDoor = (ctx, door, config) => {
   ctx.restore();
 };
 
-const drawNpc = (ctx, npc, config, elapsed) => {
+const drawNpc = (ctx, npc, config, elapsed, assets) => {
   const screen = isoToScreen(npc.position, config.tileWidth, config.tileHeight);
+  const bounce = npc.idleAnimation === 'loop' ? Math.sin(elapsed * 2) * 4 : 0;
+  if (
+    drawSpriteInstance(ctx, assets, npc.sprite, screen, {
+      offset: { y: bounce },
+    })
+  ) {
+    return;
+  }
   ctx.save();
-  const bounce = npc.idleAnimation === 'loop' ? Math.sin(elapsed * 2) * 2 : 0;
   ctx.fillStyle = NPC_COLOR;
   ctx.strokeStyle = PLAYER_OUTLINE;
   ctx.lineWidth = 2;
@@ -59,9 +106,17 @@ const drawNpc = (ctx, npc, config, elapsed) => {
   ctx.restore();
 };
 
-const drawPlayer = (ctx, state, elapsed) => {
+const drawPlayer = (ctx, state, elapsed, assets) => {
   const screen = isoToScreen(state.player.position, state.config.tileWidth, state.config.tileHeight);
-  const wobble = state.player.isMoving ? Math.sin(elapsed * 8) * 2 : 0;
+  const wobble = state.player.isMoving ? Math.sin(elapsed * 8) * 4 : 0;
+  const placement = { id: state.player.spriteId };
+  if (
+    drawSpriteInstance(ctx, assets, placement, screen, {
+      offset: { y: wobble },
+    })
+  ) {
+    return;
+  }
   ctx.save();
   ctx.fillStyle = PLAYER_COLOR;
   ctx.strokeStyle = PLAYER_OUTLINE;
@@ -105,10 +160,11 @@ const drawHints = (ctx, state) => {
 };
 
 export class IsometricRenderer {
-  constructor(display, state) {
+  constructor(display, state, assets) {
     this.display = display;
     this.state = state;
     this.elapsed = 0;
+    this.assets = assets ?? null;
   }
 
   render(deltaSeconds) {
@@ -125,20 +181,23 @@ export class IsometricRenderer {
           a.position.x + a.position.y - (b.position.x + b.position.y) ||
           (a.position.z ?? 0) - (b.position.z ?? 0),
       )
-      .forEach((tile) => drawTile(ctx, tile, this.state.config));
+      .forEach((tile) => drawTile(ctx, tile, this.state.config, this.assets));
 
     drawLights(ctx, this.state.wagon.lights, this.state.config, this.elapsed);
 
     this.state.wagon.walls
       .slice()
       .sort((a, b) => a.position.x + a.position.y - (b.position.x + b.position.y))
-      .forEach((tile) => drawTile(ctx, tile, this.state.config));
+      .forEach((tile) => drawTile(ctx, tile, this.state.config, this.assets));
 
-    this.state.wagon.doors.forEach((door) => drawDoor(ctx, door, this.state.config));
-    this.state.wagon.npcs.forEach((npc) => drawNpc(ctx, npc, this.state.config, this.elapsed));
+    this.state.wagon.doors.forEach((door) => drawDoor(ctx, door, this.state.config, this.assets));
+    this.state.wagon.npcs.forEach((npc) => drawNpc(ctx, npc, this.state.config, this.elapsed, this.assets));
 
     this.state.wagon.objects.forEach((object) => {
       const screen = isoToScreen(object.position, this.state.config.tileWidth, this.state.config.tileHeight);
+      if (drawSpriteInstance(ctx, this.assets, object.sprite, screen)) {
+        return;
+      }
       ctx.save();
       ctx.fillStyle = OBJECT_COLOR;
       ctx.globalAlpha = 0.9;
@@ -148,7 +207,7 @@ export class IsometricRenderer {
       ctx.restore();
     });
 
-    drawPlayer(ctx, this.state, this.elapsed);
+    drawPlayer(ctx, this.state, this.elapsed, this.assets);
     drawMarker(ctx, this.state, this.elapsed);
     drawHints(ctx, this.state);
 

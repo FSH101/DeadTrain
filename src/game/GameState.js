@@ -15,6 +15,7 @@
  * @property {IsoPoint[]} path
  * @property {boolean} isMoving
  * @property {Intent | null} pendingIntent
+ * @property {string} spriteId
  */
 
 /**
@@ -44,6 +45,7 @@ export const createInitialPlayerState = (spawn) => ({
   path: [],
   isMoving: false,
   pendingIntent: null,
+  spriteId: 'player',
 });
 
 export const createMarkerState = () => ({

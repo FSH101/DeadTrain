@@ -9,6 +9,8 @@ import { InputRouter } from '../input/InputRouter.js';
 import { IsometricRenderer } from '../render/IsometricRenderer.js';
 import { CanvasDisplay } from '../render/CanvasDisplay.js';
 import { trainDescriptor } from '../data/wagons.js';
+import { SpriteManager } from '../render/assets/SpriteManager.js';
+import { SPRITE_DEFINITIONS } from '../render/assets/spriteDefinitions.js';
 import { DialogueController } from '../ui/dialogue.js';
 import { HudController } from '../ui/hud.js';
 import { FadeController } from '../ui/fade.js';
@@ -45,7 +47,8 @@ export class GameApp {
     this.state = createRuntimeState(GAME_CONFIG, wagon, this.train.getState());
     this.movement = new MovementSystem(this.state);
     this.movement.setNavMesh(wagon.navmesh);
-    this.renderer = new IsometricRenderer(this.display, this.state);
+    this.assets = new SpriteManager(SPRITE_DEFINITIONS);
+    this.renderer = null;
     this.interaction = null;
     this.inputRouter = null;
     this.lastTime = performance.now();
@@ -81,6 +84,13 @@ export class GameApp {
       });
       await this.guard('Проверка данных сессии', () => this.verifyInitData(ctx.initDataRaw));
       await this.guard('Инициализация аудио', () => this.audio.init());
+      await this.guard('Загрузка графики', async () => {
+        await this.assets.loadAll((progress) => {
+          this.debug.log('assets.progress', progress);
+        });
+        this.debug.log('assets.loaded', { count: Object.keys(SPRITE_DEFINITIONS).length });
+        this.renderer = new IsometricRenderer(this.display, this.state, this.assets);
+      });
       await this.guard('Подготовка систем взаимодействия', () => {
         this.interaction = new InteractionSystem({
           state: this.state,
@@ -230,6 +240,9 @@ export class GameApp {
   }
 
   startLoop() {
+    if (!this.renderer) {
+      throw new Error('Renderer is not initialized');
+    }
     const tick = (time) => {
       if (this.destroyed || this.fatalError) {
         return;

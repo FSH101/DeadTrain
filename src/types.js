@@ -11,6 +11,14 @@
  * @property {number} y
  */
 
+/**
+ * @typedef {Object} SpritePlacement
+ * @property {string} id
+ * @property {{ x: number, y: number }} [anchor]
+ * @property {{ x: number, y: number }} [offset]
+ * @property {number} [scale]
+ */
+
 /** @typedef {'MoveTo' | 'Interact' | 'Inspect'} IntentType */
 
 /** @typedef {'door' | 'npc' | 'object'} InteractionKind */
@@ -39,6 +47,8 @@
  * @property {string} [decalId]
  * @property {number} [rotation]
  * @property {string} [tint]
+ * @property {SpritePlacement} [sprite]
+ * @property {boolean} [drawBase]
  */
 
 /**
@@ -68,6 +78,7 @@
  * @property {string} [lockedByFlag]
  * @property {string} [blockedIfFlag]
  * @property {boolean} [openByDefault]
+ * @property {SpritePlacement} [sprite]
  */
 
 /**
@@ -78,6 +89,7 @@
  * @property {number} radius
  * @property {string} dialogueId
  * @property {'static' | 'loop'} [idleAnimation]
+ * @property {SpritePlacement} [sprite]
  */
 
 /**
@@ -87,6 +99,7 @@
  * @property {IsoPoint} position
  * @property {number} radius
  * @property {string} onUse
+ * @property {SpritePlacement} [sprite]
  */
 
 /**
